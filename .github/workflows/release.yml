@@ -1,0 +1,191 @@
+name: Release & Publish (CurseForge & GitHub)
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Version to publish (leave empty to use git tag or gradle.properties mod_version)'
+        required: false
+        type: string
+        default: ''
+      release_type:
+        description: 'CurseForge Release Channel'
+        required: true
+        type: choice
+        options:
+          - release
+          - beta
+          - alpha
+        default: release
+      curseforge_id:
+        description: 'CurseForge Project ID override (optional if set in Secrets/Variables)'
+        required: false
+        type: string
+        default: ''
+      changelog:
+        description: 'Custom Markdown changelog (optional, defaults to CURSEFORGE.md)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: curseforge-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Resolve Version & CurseForge Credentials
+        id: meta
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.release_version }}
+          INPUT_TYPE: ${{ inputs.release_type }}
+          INPUT_CF_ID: ${{ inputs.curseforge_id }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          CF_SECRET_ID: ${{ secrets.CURSEFORGE_PROJECT_ID || secrets.CF_PROJECT_ID || secrets.CURSEFORGE_ID || secrets.PROJECT_ID }}
+          CF_VAR_ID: ${{ vars.CURSEFORGE_PROJECT_ID || vars.CF_PROJECT_ID || vars.CURSEFORGE_ID || vars.PROJECT_ID }}
+          CF_TOKEN_VAL: ${{ secrets.CURSEFORGE_TOKEN || secrets.CF_TOKEN || secrets.CURSEFORGE_API_KEY || secrets.CF_API_KEY }}
+        run: |
+          mod_name="$(grep '^mod_name=' gradle.properties | cut -d= -f2- | tr -d '\r')"
+          mod_version="$(grep '^mod_version=' gradle.properties | cut -d= -f2- | tr -d '\r')"
+          minecraft_version="$(grep '^minecraft_version=' gradle.properties | cut -d= -f2- | tr -d '\r')"
+          neo_version="$(grep '^neo_version=' gradle.properties | cut -d= -f2- | tr -d '\r')"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            raw_version="$INPUT_VERSION"
+          elif [ "$REF_TYPE" = "tag" ] && [ -n "$REF_NAME" ]; then
+            raw_version="$REF_NAME"
+          else
+            raw_version="$mod_version"
+          fi
+
+          clean_version="${raw_version#v}"
+          tag_name="v${clean_version}"
+          publish_type="${INPUT_TYPE:-release}"
+          publish_name="${mod_name} v${clean_version} (NeoForge ${minecraft_version})"
+
+          cf_id="$INPUT_CF_ID"
+          if [ -z "$cf_id" ]; then
+            cf_id="${CF_SECRET_ID:-$CF_VAR_ID}"
+          fi
+
+          if [ -z "$cf_id" ]; then
+            echo "::error::Missing CurseForge Project ID. Set secret/variable CURSEFORGE_PROJECT_ID (or CF_PROJECT_ID) or provide curseforge_id input."
+            exit 1
+          fi
+
+          if [ -z "$CF_TOKEN_VAL" ]; then
+            echo "::error::Missing CurseForge API Token. Set repository secret CURSEFORGE_TOKEN (or CF_TOKEN / CURSEFORGE_API_KEY)."
+            exit 1
+          fi
+
+          echo "mod_name=$mod_name" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$minecraft_version" >> "$GITHUB_OUTPUT"
+          echo "neo_version=$neo_version" >> "$GITHUB_OUTPUT"
+          echo "version=$clean_version" >> "$GITHUB_OUTPUT"
+          echo "tag_name=$tag_name" >> "$GITHUB_OUTPUT"
+          echo "publish_name=$publish_name" >> "$GITHUB_OUTPUT"
+          echo "publish_type=$publish_type" >> "$GITHUB_OUTPUT"
+          echo "cf_id=$cf_id" >> "$GITHUB_OUTPUT"
+
+      - name: Build with Gradle
+        run: ./gradlew build -Pmod_version=${{ steps.meta.outputs.version }}
+
+      - name: Prepare Changelog
+        id: changelog
+        shell: bash
+        env:
+          INPUT_CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          file="build/changelog.md"
+          if [ -n "$INPUT_CHANGELOG" ]; then
+            printf '%s\n' "$INPUT_CHANGELOG" > "$file"
+          elif [ -f "CHANGELOG.md" ]; then
+            cat CHANGELOG.md > "$file"
+          elif [ -f "CURSEFORGE.md" ]; then
+            cat CURSEFORGE.md > "$file"
+          else
+            printf 'Release v%s for Minecraft %s (NeoForge %s).\n' "${{ steps.meta.outputs.version }}" "${{ steps.meta.outputs.minecraft_version }}" "${{ steps.meta.outputs.neo_version }}" > "$file"
+          fi
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          name: ${{ steps.meta.outputs.publish_name }}
+          body_path: ${{ steps.changelog.outputs.file }}
+          files: |
+            build/libs/advancedcolonies-*.jar
+            !build/libs/*-sources.jar
+            !build/libs/*-javadoc.jar
+          draft: false
+          prerelease: ${{ steps.meta.outputs.publish_type != 'release' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to CurseForge
+        id: publish_cf
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ steps.meta.outputs.cf_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN || secrets.CF_TOKEN || secrets.CURSEFORGE_API_KEY || secrets.CF_API_KEY }}
+          files: |
+            build/libs/!(*-@(dev|sources|javadoc)).jar
+          name: ${{ steps.meta.outputs.publish_name }}
+          version: ${{ steps.meta.outputs.version }}
+          version-type: ${{ steps.meta.outputs.publish_type }}
+          changelog-file: ${{ steps.changelog.outputs.file }}
+          loaders: |
+            neoforge
+          game-versions: |
+            ${{ steps.meta.outputs.minecraft_version }}
+          java: |
+            Java 21
+          dependencies: |
+            minecolonies(required)
+          retry-attempts: 2
+          retry-delay: 10000
+          fail-mode: fail
+
+      - name: Write Workflow Summary
+        shell: bash
+        run: |
+          {
+            echo "## 🚀 Advanced Colonies Release Summary"
+            echo ""
+            echo "- **Version**: \`v${{ steps.meta.outputs.version }}\`"
+            echo "- **Channel**: \`${{ steps.meta.outputs.publish_type }}\`"
+            echo "- **Minecraft**: \`${{ steps.meta.outputs.minecraft_version }}\` (NeoForge \`${{ steps.meta.outputs.neo_version }}\`)"
+            echo "- **CurseForge Project ID**: \`${{ steps.meta.outputs.cf_id }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
