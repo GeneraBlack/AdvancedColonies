@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="Advanced Colonies Logo" width="260" />
+</p>
+
 # Advanced Colonies
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg)](https://www.minecraft.net/)
