@@ -6,8 +6,15 @@
   "refmap": "advancedcolonies.refmap.json",
   "mixins": [
     "buildings.builder.SettingsModuleMixin",
+    "buildings.restaurant.BuildingCookMixin",
+    "common.eating.EntityAIEatTaskMixin",
+    "common.eating.FoodUtilsMixin",
+    "common.navigation.AbstractPathJobMixin",
+    "common.navigation.PathJobMoveToLocationMixin",
+    "common.navigation.PathingStuckHandlerMixin",
     "workers.builder.AbstractEntityAIStructureMixin",
-    "workers.builder.EntityAIStructureBuilderMixin"
+    "workers.builder.EntityAIStructureBuilderMixin",
+    "workers.cook.EntityAIWorkCookMixin"
   ],
   "client": [
   ],

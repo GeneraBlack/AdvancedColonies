@@ -1,5 +1,7 @@
 # Gradle
 .gradle/
+wrapper/
+gradle/wrapper/dists/
 build/
 out/
 bin/
