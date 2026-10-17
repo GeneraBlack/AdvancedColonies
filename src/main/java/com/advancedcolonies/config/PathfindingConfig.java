@@ -23,6 +23,8 @@ public final class PathfindingConfig {
     public final ModConfigSpec.DoubleValue berryBushPenalty;
 
     public final ModConfigSpec.BooleanValue enableLadderSlipProtection;
+    public final ModConfigSpec.BooleanValue fixLadderAndScaffoldingClimb;
+    public final ModConfigSpec.BooleanValue centerMinecartDismount;
     public final ModConfigSpec.BooleanValue enableShallowWaterRescue;
     public final ModConfigSpec.BooleanValue allowFenceGatePassage;
     public final ModConfigSpec.BooleanValue disableStuckTeleport;
@@ -84,6 +86,14 @@ public final class PathfindingConfig {
         this.enableLadderSlipProtection = builder
                 .comment("Prevents citizens from slipping off ladders during diagonal transitions.")
                 .define("enableLadderSlipProtection", true);
+
+        this.fixLadderAndScaffoldingClimb = builder
+                .comment("Fixes the vanilla MineColonies West-ladder Y-offset bug (+0.8 Y) and enables upward climb impulses on scaffolding and vines.")
+                .define("fixLadderAndScaffoldingClimb", true);
+
+        this.centerMinecartDismount = builder
+                .comment("Centers citizens on the rail exit node when dismounting a MineColonies minecart so they are not ejected into walls or off bridges.")
+                .define("centerMinecartDismount", true);
 
         this.enableShallowWaterRescue = builder
                 .comment("Helps citizens escape 1-block water pockets under solid ceilings before drowning.")

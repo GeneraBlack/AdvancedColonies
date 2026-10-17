@@ -153,14 +153,24 @@ public final class ClientVisualDebugRenderer {
 
         // Line 2: Actions (Citizen AI State + Worker AI State)
         if (ClientDebugCache.isShowActions()) {
-            final boolean isAlertState = snapshot.stuckLevel() > 0
-                    || snapshot.citizenAiState().contains("SICK")
-                    || snapshot.citizenAiState().contains("FLEE");
-            final ChatFormatting actionColor = isAlertState ? ChatFormatting.RED : ChatFormatting.AQUA;
+            final String cState = snapshot.citizenAiState();
+            final String wState = snapshot.workerAiState();
+            final boolean isCriticalState = snapshot.stuckLevel() > 0
+                    || cState.contains("SICK")
+                    || cState.contains("FLEE")
+                    || wState.contains("FLEE");
+            final boolean isWaitingOrSpecialState = cState.contains("MOURN")
+                    || wState.contains("SLEEP")
+                    || wState.contains("REGEN")
+                    || wState.contains("NEEDS")
+                    || wState.contains("GATHERING_REQUIRED_MATERIALS");
+            final ChatFormatting actionColor = isCriticalState
+                    ? ChatFormatting.RED
+                    : (isWaitingOrSpecialState ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.AQUA);
             lines.add(Component.literal(String.format(
                     "AI: %s -> %s",
-                    snapshot.citizenAiState(),
-                    snapshot.workerAiState())).withStyle(actionColor));
+                    cState,
+                    wState)).withStyle(actionColor));
         }
 
         // Line 3: Stats (Health, Saturation, Happiness)

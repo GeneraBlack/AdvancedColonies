@@ -47,6 +47,15 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.IntValue visualDebugMaxRange;
     public final ModConfigSpec.IntValue visualDebugSyncIntervalTicks;
 
+    // Guards, University Researcher & Mourning Control
+    public final ModConfigSpec.BooleanValue preventGuardSleepingDuringRaids;
+    public final ModConfigSpec.BooleanValue disableGuardSleepingOnDuty;
+    public final ModConfigSpec.BooleanValue harmlessGuardWakeUp;
+    public final ModConfigSpec.BooleanValue honorGuardRetreatWithoutResearch;
+    public final ModConfigSpec.BooleanValue enableResearcherSkillScaling;
+    public final ModConfigSpec.BooleanValue exemptEssentialWorkersFromMourning;
+    public final ModConfigSpec.IntValue maxMourningDurationSeconds;
+
     public CitizenCommonConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Shared Citizen AI, Eating, Health, Leisure & QoL Settings").push("citizenCommon");
 
@@ -169,6 +178,34 @@ public final class CitizenCommonConfig {
         this.visualDebugSyncIntervalTicks = builder
                 .comment("Interval in server ticks between visual debugger data sync packets.")
                 .defineInRange("visualDebugSyncIntervalTicks", 5, 1, 40);
+
+        this.preventGuardSleepingDuringRaids = builder
+                .comment("Prevents Guards from randomly falling asleep on duty while a colony raid/attack is active.")
+                .define("preventGuardSleepingDuringRaids", true);
+
+        this.disableGuardSleepingOnDuty = builder
+                .comment("If true, Guards never fall asleep on duty at all.")
+                .define("disableGuardSleepingOnDuty", false);
+
+        this.harmlessGuardWakeUp = builder
+                .comment("Wakes up sleeping Guards cleanly without dealing real damage or durability loss to their armor.")
+                .define("harmlessGuardWakeUp", true);
+
+        this.honorGuardRetreatWithoutResearch = builder
+                .comment("Allows Guards to retreat on low health when 'Retreat on low health' is enabled in the Guard Tower GUI, even before the University Retreat research is unlocked.")
+                .define("honorGuardRetreatWithoutResearch", true);
+
+        this.enableResearcherSkillScaling = builder
+                .comment("Scales the University Researcher's bookshelf study speed dynamically with their Knowledge skill instead of waiting a flat 60 seconds per shelf.")
+                .define("enableResearcherSkillScaling", true);
+
+        this.exemptEssentialWorkersFromMourning = builder
+                .comment("Exempts essential emergency professions (Healers, Cooks/Bakers, Builders, Couriers) from stopping work to mourn after a citizen death.")
+                .define("exemptEssentialWorkersFromMourning", true);
+
+        this.maxMourningDurationSeconds = builder
+                .comment("Maximum duration in seconds that mourning citizens spend grieving before returning to work (0 = disable mourning completely, 1200 = full vanilla day).")
+                .defineInRange("maxMourningDurationSeconds", 120, 0, 1200);
 
         builder.pop();
     }

@@ -15,6 +15,8 @@ public final class AgricultureAndHerdingConfig {
 
     // Farmer & Planter
     public final ModConfigSpec.BooleanValue enableEnhancedFarmerAI;
+    public final ModConfigSpec.BooleanValue extendSoftShoesToAllCitizens;
+    public final ModConfigSpec.BooleanValue alwaysProtectColonyFarmland;
     public final ModConfigSpec.BooleanValue enableEnhancedPlanterAI;
 
     // Herders & Butcher
@@ -43,6 +45,14 @@ public final class AgricultureAndHerdingConfig {
         this.enableEnhancedFarmerAI = builder
                 .comment("Enables streamlined harvesting, tilling, and planting loops for Farmers.")
                 .define("enableEnhancedFarmerAI", true);
+
+        this.extendSoftShoesToAllCitizens = builder
+                .comment("When the 'Soft Shoes' University research is unlocked, extends farmland trample protection to ALL colony citizens (Guards, Couriers, Builders, Visitors) instead of only the Farmer.")
+                .define("extendSoftShoesToAllCitizens", true);
+
+        this.alwaysProtectColonyFarmland = builder
+                .comment("If true, prevents colony citizens from trampling farmland even before the 'Soft Shoes' research is unlocked.")
+                .define("alwaysProtectColonyFarmland", false);
 
         this.enableEnhancedPlanterAI = builder
                 .comment("Enables streamlined plantation field collection and accelerated growth handling for Planters.")

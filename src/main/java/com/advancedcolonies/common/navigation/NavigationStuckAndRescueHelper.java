@@ -147,4 +147,66 @@ public final class NavigationStuckAndRescueHelper {
             }
         }
     }
+
+    /**
+     * Corrects the vanilla MineColonies {@code case WEST:} ladder Y-offset typo ({@code +0.8} Y)
+     * and ensures smooth upward climbing on scaffolding blocks.
+     *
+     * @param entity       the climbing citizen entity
+     * @param ladderFacing the ladder facing direction of the current path node
+     * @param wantedY      the current wanted Y coordinate computed by {@code handlePathPointOnLadder}
+     * @return the corrected wanted Y coordinate
+     */
+    public static double correctClimbWantedYAndImpulse(
+            @NotNull final Mob entity,
+            @NotNull final Direction ladderFacing,
+            final double wantedY) {
+
+        if (!AdvancedColoniesConfig.PATHFINDING.fixLadderAndScaffoldingClimb.get()) {
+            return wantedY;
+        }
+
+        double correctedY = wantedY;
+        // Fix vanilla MineColonies case WEST: vec3.add(0.8, 0.8, 0) typo where Y received +0.8
+        if (ladderFacing == Direction.WEST) {
+            correctedY -= 0.8D;
+        }
+
+        // Ensure steady upward velocity when climbing scaffolding or non-LadderBlock climbables
+        if (ladderFacing != Direction.DOWN) {
+            final BlockState feetState = entity.level().getBlockState(entity.blockPosition());
+            if (feetState.isScaffolding(entity)) {
+                final Vec3 delta = entity.getDeltaMovement();
+                if (delta.y < 0.2D) {
+                    entity.setDeltaMovement(delta.x * 0.5D, 0.2D, delta.z * 0.5D);
+                }
+            }
+        }
+
+        return correctedY;
+    }
+
+    /**
+     * Centers the entity directly onto the rail-exit path node when dismounting a MineColonies minecart
+     * so vanilla dismount logic does not eject the citizen into adjacent walls, fences, or off bridges.
+     *
+     * @param entity the dismounting citizen entity
+     * @param nodeX  the path node X block coordinate
+     * @param nodeY  the path node Y block coordinate
+     * @param nodeZ  the path node Z block coordinate
+     */
+    public static void centerEntityOnRailExit(
+            @NotNull final Mob entity,
+            final int nodeX,
+            final int nodeY,
+            final int nodeZ) {
+
+        if (!AdvancedColoniesConfig.PATHFINDING.centerMinecartDismount.get()) {
+            return;
+        }
+
+        entity.setPos(nodeX + 0.5D, nodeY, nodeZ + 0.5D);
+        final Vec3 delta = entity.getDeltaMovement();
+        entity.setDeltaMovement(0.0D, Math.max(0.0D, delta.y), 0.0D);
+    }
 }

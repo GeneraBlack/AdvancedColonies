@@ -159,4 +159,49 @@ public final class AgricultureWorkHelper {
             drop.setNoPickUpDelay();
         }
     }
+
+    /**
+     * Checks whether farmland trampling by a colony citizen or visitor should be prevented.
+     * <p>
+     * In vanilla MineColonies, unlocking the {@code SOFT_SHOES} University research only prevents
+     * {@code JobFarmer} from trampling crops—meaning Guards, Couriers, Builders, and Visitors
+     * walking across fields still destroy farmland. When {@code extendSoftShoesToAllCitizens} is
+     * enabled, unlocking {@code SOFT_SHOES} protects farmland from all colony citizens.
+     * </p>
+     *
+     * @param entity the entity stepping/falling onto farmland
+     * @param pos    the farmland block position
+     * @return {@code true} if the trample event should be cancelled
+     */
+    public static boolean shouldPreventCitizenFarmlandTrample(
+            @Nullable final net.minecraft.world.entity.Entity entity,
+            @Nullable final BlockPos pos) {
+
+        if (!(entity instanceof AbstractEntityCitizen citizen) || citizen.level().isClientSide()) {
+            return false;
+        }
+
+        if (AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.alwaysProtectColonyFarmland.get()) {
+            return true;
+        }
+
+        if (!AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.extendSoftShoesToAllCitizens.get()) {
+            return false;
+        }
+
+        com.minecolonies.api.colony.IColony colony = citizen.getCitizenColonyHandler() != null
+                ? citizen.getCitizenColonyHandler().getColonyOrRegister()
+                : null;
+        if (colony == null && pos != null) {
+            colony = com.minecolonies.api.colony.IColonyManager.getInstance().getIColony(citizen.level(), pos);
+        }
+
+        if (colony != null && colony.getResearchManager() != null && colony.getResearchManager().getResearchEffects() != null) {
+            return colony.getResearchManager()
+                    .getResearchEffects()
+                    .getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.SOFT_SHOES) > 0;
+        }
+
+        return false;
+    }
 }
