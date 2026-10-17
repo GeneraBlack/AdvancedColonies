@@ -5,5 +5,19 @@
   "advancedcolonies.message.citizen_hurt_alert": "[AdvancedColonies] %1$s was hurt by %2$s at (%3$s, %4$s, %5$s)!",
   "advancedcolonies.message.mind_reader.header": "[Mind Reader] %1$s (%2$s)",
   "advancedcolonies.message.mind_reader.ai_state": "  AI State: %1$s | Work State: %2$s | Target: %3$s",
-  "advancedcolonies.message.mind_reader.vitals": "  HP: %1$s | Saturation: %2$s | Happiness: %3$s"
+  "advancedcolonies.message.mind_reader.vitals": "  HP: %1$s | Saturation: %2$s | Happiness: %3$s",
+  "advancedcolonies.debug.disabled_in_config": "[Visual Debugger] Visual debugging is disabled in the server configuration.",
+  "advancedcolonies.debug.no_colony_found": "[Visual Debugger] Could not find a colony at your position.",
+  "advancedcolonies.debug.colony_enabled": "[Visual Debugger] Enabled colony-wide debugging for %1$s (#%2$s).",
+  "advancedcolonies.debug.colony_disabled": "[Visual Debugger] Disabled colony-wide debugging for %1$s (#%2$s).",
+  "advancedcolonies.debug.citizen_not_found": "[Visual Debugger] No citizen with ID #%1$s found in this colony.",
+  "advancedcolonies.debug.citizen_name_not_found": "[Visual Debugger] No citizen matching '%1$s' found in this colony.",
+  "advancedcolonies.debug.no_citizen_looked_at": "[Visual Debugger] You are not looking at a citizen (max 32 blocks).",
+  "advancedcolonies.debug.citizen_enabled": "[Visual Debugger] Enabled visual debugging for %1$s (#%2$s).",
+  "advancedcolonies.debug.citizen_disabled": "[Visual Debugger] Disabled visual debugging for %1$s (#%2$s).",
+  "advancedcolonies.debug.invalid_layer": "[Visual Debugger] Unknown layer '%1$s'. Valid layers: actions, stats, path, all.",
+  "advancedcolonies.debug.layer_updated": "[Visual Debugger] Layer '%1$s' set to: %2$s.",
+  "advancedcolonies.debug.status_inactive": "[Visual Debugger] Currently inactive. Use /acdebug colony, /acdebug citizen <id>, or /acdebug look.",
+  "advancedcolonies.debug.status_active": "[Visual Debugger] Colonies: %1$s | Individual Citizens: %2$s | Layers [Actions=%3$s, Stats=%4$s, Path=%5$s]",
+  "advancedcolonies.debug.cleared": "[Visual Debugger] All visual debug overlays disabled."
 }

@@ -5,5 +5,19 @@
   "advancedcolonies.message.citizen_hurt_alert": "[AdvancedColonies] %1$s wurde von %2$s bei (%3$s, %4$s, %5$s) verletzt!",
   "advancedcolonies.message.mind_reader.header": "[Gedankenleser] %1$s (%2$s)",
   "advancedcolonies.message.mind_reader.ai_state": "  KI-Status: %1$s | Arbeits-Status: %2$s | Ziel: %3$s",
-  "advancedcolonies.message.mind_reader.vitals": "  LP: %1$s | Sättigung: %2$s | Zufriedenheit: %3$s"
+  "advancedcolonies.message.mind_reader.vitals": "  LP: %1$s | Sättigung: %2$s | Zufriedenheit: %3$s",
+  "advancedcolonies.debug.disabled_in_config": "[Visueller Debugger] Der visuelle Debugger ist in der Server-Konfiguration deaktiviert.",
+  "advancedcolonies.debug.no_colony_found": "[Visueller Debugger] Keine Kolonie an deiner Position gefunden.",
+  "advancedcolonies.debug.colony_enabled": "[Visueller Debugger] Kolonie-weites Debugging aktiviert für %1$s (#%2$s).",
+  "advancedcolonies.debug.colony_disabled": "[Visueller Debugger] Kolonie-weites Debugging deaktiviert für %1$s (#%2$s).",
+  "advancedcolonies.debug.citizen_not_found": "[Visueller Debugger] Kein Bürger mit ID #%1$s in dieser Kolonie gefunden.",
+  "advancedcolonies.debug.citizen_name_not_found": "[Visueller Debugger] Kein Bürger mit Namen '%1$s' in dieser Kolonie gefunden.",
+  "advancedcolonies.debug.no_citizen_looked_at": "[Visueller Debugger] Du schaust gerade keinen Bürger an (max. 32 Blöcke).",
+  "advancedcolonies.debug.citizen_enabled": "[Visueller Debugger] Visuelles Debugging aktiviert für %1$s (#%2$s).",
+  "advancedcolonies.debug.citizen_disabled": "[Visueller Debugger] Visuelles Debugging deaktiviert für %1$s (#%2$s).",
+  "advancedcolonies.debug.invalid_layer": "[Visueller Debugger] Unbekannte Ebene '%1$s'. Gültig: actions, stats, path, all.",
+  "advancedcolonies.debug.layer_updated": "[Visueller Debugger] Ebene '%1$s' gesetzt auf: %2$s.",
+  "advancedcolonies.debug.status_inactive": "[Visueller Debugger] Derzeit inaktiv. Nutze /acdebug colony, /acdebug citizen <id> oder /acdebug look.",
+  "advancedcolonies.debug.status_active": "[Visueller Debugger] Kolonien: %1$s | Einzelne Bürger: %2$s | Ebenen [Actions=%3$s, Stats=%4$s, Path=%5$s]",
+  "advancedcolonies.debug.cleared": "[Visueller Debugger] Alle visuellen Debug-Anzeigen deaktiviert."
 }

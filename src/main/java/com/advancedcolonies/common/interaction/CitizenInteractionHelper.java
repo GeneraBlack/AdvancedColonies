@@ -97,6 +97,24 @@ public final class CitizenInteractionHelper {
                     String.format("%.1f/%.1f", citizen.getHealth(), citizen.getMaxHealth()),
                     String.format("%.1f", saturation),
                     String.format("%.1f", happiness)).withStyle(ChatFormatting.GREEN));
+
+            if (player.isShiftKeyDown()
+                    && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                    && data != null
+                    && data.getColony() != null
+                    && AdvancedColoniesConfig.CITIZEN_COMMON.enableVisualDebugger.get()) {
+                final boolean nowEnabled = com.advancedcolonies.common.debug.ServerDebugSessionManager.setCitizenDebug(
+                        serverPlayer,
+                        data.getColony().getID(),
+                        data.getId(),
+                        null);
+                player.sendSystemMessage(Component.translatable(
+                        nowEnabled
+                                ? "advancedcolonies.debug.citizen_enabled"
+                                : "advancedcolonies.debug.citizen_disabled",
+                        name,
+                        data.getId()).withStyle(nowEnabled ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
+            }
         }
 
         return InteractionResult.SUCCESS;

@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PathingStuckHandlerMixin<NAV extends PathNavigation & IMinecoloniesNavigator> {
 
     @Shadow
+    private int stuckLevel;
+
+    @Shadow
     private int globalTimeout;
 
     @Shadow
@@ -35,6 +38,13 @@ public abstract class PathingStuckHandlerMixin<NAV extends PathNavigation & IMin
             final int savedTicks = Math.max(0, 10 - adjustedIncrement);
             this.globalTimeout = Math.max(0, this.globalTimeout - savedTicks);
             this.delayToNextUnstuckAction += savedTicks;
+        }
+        if (navigator.getOurEntity() != null && navigator.getOurEntity().level() != null) {
+            com.advancedcolonies.common.debug.ServerDebugSessionManager.recordStuckMetrics(
+                    navigator.getOurEntity().getId(),
+                    this.stuckLevel,
+                    this.globalTimeout,
+                    navigator.getOurEntity().level().getGameTime());
         }
     }
 

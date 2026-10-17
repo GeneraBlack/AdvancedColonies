@@ -1,6 +1,7 @@
 package com.advancedcolonies;
 
 import com.advancedcolonies.config.AdvancedColoniesConfig;
+import com.advancedcolonies.network.AdvancedColoniesNetwork;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -23,6 +24,7 @@ public final class AdvancedColonies {
 
     public AdvancedColonies(final IEventBus modEventBus, final ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, AdvancedColoniesConfig.SPEC, MOD_ID + "-common.toml");
-        LOGGER.info("Advanced Colonies initialized with modular configuration.");
+        modEventBus.addListener(AdvancedColoniesNetwork::onRegisterPayloads);
+        LOGGER.info("Advanced Colonies initialized with modular configuration and network debug sync.");
     }
 }

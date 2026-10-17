@@ -43,6 +43,9 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.BooleanValue disablePermissionLevitation;
     public final ModConfigSpec.BooleanValue fixDoorAndGateToggleSlam;
     public final ModConfigSpec.BooleanValue returnGearOnUndertakerResurrect;
+    public final ModConfigSpec.BooleanValue enableVisualDebugger;
+    public final ModConfigSpec.IntValue visualDebugMaxRange;
+    public final ModConfigSpec.IntValue visualDebugSyncIntervalTicks;
 
     public CitizenCommonConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Shared Citizen AI, Eating, Health, Leisure & QoL Settings").push("citizenCommon");
@@ -154,6 +157,18 @@ public final class CitizenCommonConfig {
         this.returnGearOnUndertakerResurrect = builder
                 .comment("When the Undertaker resurrects a fallen citizen, returns the citizen's grave items directly to their inventory instead of dumping them into the Graveyard rack.")
                 .define("returnGearOnUndertakerResurrect", true);
+
+        this.enableVisualDebugger = builder
+                .comment("Enables the in-game visual debugger (/acdebug command and Shift+Compass click) for rendering citizen AI actions, stats, and 3D pathfinding.")
+                .define("enableVisualDebugger", true);
+
+        this.visualDebugMaxRange = builder
+                .comment("Maximum range in blocks around the player for streaming colony-wide visual debug data.")
+                .defineInRange("visualDebugMaxRange", 96, 16, 256);
+
+        this.visualDebugSyncIntervalTicks = builder
+                .comment("Interval in server ticks between visual debugger data sync packets.")
+                .defineInRange("visualDebugSyncIntervalTicks", 5, 1, 40);
 
         builder.pop();
     }
