@@ -6,210 +6,96 @@ import subprocess
 import wave
 from pathlib import Path
 
-import edge_tts
+from google import genai
+from google.genai import types
 
 PROJECT_ROOT = Path(r"d:\projekt\AdvancedColonies")
 SOUNDS_ROOT = PROJECT_ROOT / "src" / "main" / "resources" / "assets" / "advancedcolonies" / "sounds" / "voice"
 ADV_SOUNDS_JSON = PROJECT_ROOT / "src" / "main" / "resources" / "assets" / "advancedcolonies" / "sounds.json"
 MC_SOUNDS_JSON = PROJECT_ROOT / "src" / "main" / "resources" / "assets" / "minecolonies" / "sounds.json"
 
-# 8 distinct voice profiles mapped to BOTH Google Gemini 2.5 Native Voices and Multi-Region Neural Voices
+LIVE_MODELS = [
+    "gemini-3.8-live",
+    "gemini-3.1-flash-live-preview",
+    "gemini-2.5-flash-native-audio-latest",
+]
+
+SYSTEM_INSTRUCTION = (
+    "You are a professional voice actor for a medieval fantasy colony building game (MineColonies). "
+    "For every user message, perform ONLY the exact dialogue line after the colon, acting out the "
+    "specified emotion with 100% conviction, natural vocal dynamics, and realism. "
+    "Never speak the emotion description itself, and never add any extra words before or after the line."
+)
+
+# 8 distinct Google Gemini 3.8 Live voices mapped to MineColonies' 8 citizen voice profiles
 VOICES = {
-    "male1":   {"gemini_voice": "Puck",   "edge_voice": "en-GB-RyanNeural",    "base_rate": 0,  "base_pitch": 0},
-    "male2":   {"gemini_voice": "Charon", "edge_voice": "en-US-GuyNeural",     "base_rate": 2,  "base_pitch": -1},
-    "male3":   {"gemini_voice": "Fenrir", "edge_voice": "en-IE-ConnorNeural",  "base_rate": 1,  "base_pitch": 1},
-    "male4":   {"gemini_voice": "Orus",   "edge_voice": "en-AU-WilliamNeural", "base_rate": -2, "base_pitch": -3},
-    "female1": {"gemini_voice": "Kore",   "edge_voice": "en-GB-SoniaNeural",   "base_rate": 0,  "base_pitch": 0},
-    "female2": {"gemini_voice": "Aoede",  "edge_voice": "en-US-AriaNeural",    "base_rate": 2,  "base_pitch": 1},
-    "female3": {"gemini_voice": "Leda",   "edge_voice": "en-IE-EmilyNeural",   "base_rate": 1,  "base_pitch": 2},
-    "female4": {"gemini_voice": "Zephyr", "edge_voice": "en-AU-NatashaNeural", "base_rate": 0,  "base_pitch": -1},
+    "male1":   {"gemini_voice": "Puck",   "persona": "Lively, expressive townsman"},
+    "male2":   {"gemini_voice": "Charon", "persona": "Deep, grounded craftsman"},
+    "male3":   {"gemini_voice": "Fenrir", "persona": "Energetic, bold colonist"},
+    "male4":   {"gemini_voice": "Orus",   "persona": "Sturdy, seasoned veteran"},
+    "female1": {"gemini_voice": "Kore",   "persona": "Warm, clear townswoman"},
+    "female2": {"gemini_voice": "Aoede",  "persona": "Bright, expressive artisan"},
+    "female3": {"gemini_voice": "Leda",   "persona": "Gentle, friendly villager"},
+    "female4": {"gemini_voice": "Zephyr", "persona": "Spirited, confident worker"},
 }
 
-# Situational emotional acting instructions (for Google Gemini 2.5 TTS) + situational prosody deltas & audio filters
 SITUATION_EMOTIONS = {
-    "danger": {
-        "gemini_prompt": (
-            "Act as a medieval fantasy villager in immediate mortal danger during a raid attack. "
-            "Speak with high urgency, panic, breathless alarm, and a raised shouting tone:"
-        ),
-        "rate_delta": +18,
-        "pitch_delta": +6,
-        "volume": "+15%",
-        "ffmpeg_filter": "vibrato=f=6:d=0.12,treble=g=3,acompressor=threshold=-16dB:ratio=3:makeup=4dB",
-    },
-    "gotobed": {
-        "gemini_prompt": (
-            "Act as an exhausted villager at the end of a long workday, barely able to keep their eyes open. "
-            "Speak in a slow, sleepy, yawning, soft, worn-out nighttime voice:"
-        ),
-        "rate_delta": -18,
-        "pitch_delta": -5,
-        "volume": "-12%",
-        "ffmpeg_filter": "lowpass=f=3800,volume=0.85",
-    },
-    "badweather": {
-        "gemini_prompt": (
-            "Act as a villager stuck working outdoors in a cold, soaking downpour and thunderstorm. "
-            "Speak with a shivering, frustrated, windswept, uncomfortable tone:"
-        ),
-        "rate_delta": +6,
-        "pitch_delta": +2,
-        "volume": "+4%",
-        "ffmpeg_filter": "vibrato=f=7.5:d=0.15,highpass=f=180",
-    },
-    "lowsaturation": {
-        "gemini_prompt": (
-            "Act as a starving, worn-out worker whose stomach is rumbling after hours of hard labor. "
-            "Speak in a weary, longing, slightly strained, hungry voice:"
-        ),
-        "rate_delta": -10,
-        "pitch_delta": -3,
-        "volume": "-5%",
-        "ffmpeg_filter": "lowpass=f=4500",
-    },
-    "highsaturation": {
-        "gemini_prompt": (
-            "Act as a villager who just finished a delicious, hot, hearty meal at the tavern. "
-            "Speak with warm satisfaction, relief, energy, and a contented smile:"
-        ),
-        "rate_delta": +6,
-        "pitch_delta": +3,
-        "volume": "+6%",
-        "ffmpeg_filter": "bass=g=2,treble=g=2",
-    },
-    "badhousing": {
-        "gemini_prompt": (
-            "Act as a villager sighing about their cramped, drafty, tiny cottage. "
-            "Speak in a mildly disappointed, wistful, grumbling tone:"
-        ),
-        "rate_delta": -8,
-        "pitch_delta": -3,
-        "volume": "-4%",
-        "ffmpeg_filter": "lowpass=f=4600",
-    },
-    "goodhousing": {
-        "gemini_prompt": (
-            "Act as a villager admiring their spacious, cozy, upgraded home. "
-            "Speak with genuine warmth, pride, comfort, and gratitude:"
-        ),
-        "rate_delta": +5,
-        "pitch_delta": +3,
-        "volume": "+5%",
-        "ffmpeg_filter": "bass=g=2,treble=g=2",
-    },
-    "greeting": {
-        "gemini_prompt": (
-            "Act as a friendly, welcoming townsfolk greeting the Mayor who just walked up. "
-            "Speak in a bright, upbeat, warm, enthusiastic tone:"
-        ),
-        "rate_delta": +8,
-        "pitch_delta": +4,
-        "volume": "+8%",
-        "ffmpeg_filter": "treble=g=2",
-    },
-    "farewell": {
-        "gemini_prompt": (
-            "Act as a warm, caring villager wishing a friend safe travels outside the town walls. "
-            "Speak in a friendly, heartfelt, encouraging tone:"
-        ),
-        "rate_delta": +2,
-        "pitch_delta": +2,
-        "volume": "+4%",
-        "ffmpeg_filter": "bass=g=1",
-    },
-    "missingequipment": {
-        "gemini_prompt": (
-            "Act as a frustrated craftsman stuck at their workbench because their tools broke or supplies ran out. "
-            "Speak in an impatient, annoyed, slightly stressed tone:"
-        ),
-        "rate_delta": +8,
-        "pitch_delta": +2,
-        "volume": "+5%",
-        "ffmpeg_filter": "treble=g=2",
-    },
-    "happy": {
-        "gemini_prompt": (
-            "Act as a joyful, high-spirited villager enjoying a wonderful day in a thriving colony. "
-            "Speak with a big smile, lively energy, and cheerful enthusiasm:"
-        ),
-        "rate_delta": +10,
-        "pitch_delta": +5,
-        "volume": "+8%",
-        "ffmpeg_filter": "treble=g=3",
-    },
-    "unhappy": {
-        "gemini_prompt": (
-            "Act as a discouraged, exhausted, sad villager who has had a rough few days, including mourning or hardship. "
-            "Speak slowly with a heavy heart, low energy, and a melancholic sigh:"
-        ),
-        "rate_delta": -16,
-        "pitch_delta": -6,
-        "volume": "-10%",
-        "ffmpeg_filter": "lowpass=f=3600,volume=0.88",
-    },
-    "sick": {
-        "gemini_prompt": (
-            "Act as a sick, feverish villager shivering with a bad cold on the way to the Hospital. "
-            "Speak in a weak, raspy, shaky, exhausted, congested voice:"
-        ),
-        "rate_delta": -20,
-        "pitch_delta": -6,
-        "volume": "-14%",
-        "ffmpeg_filter": "vibrato=f=6.5:d=0.18,lowpass=f=3400,volume=0.82",
-    },
-    "interaction": {
-        "gemini_prompt": (
-            "Act as a friendly villager chatting warmly with a neighbor or thanking a patrolling Guard on the street. "
-            "Speak in a natural, conversational, neighborly, appreciative tone:"
-        ),
-        "rate_delta": +5,
-        "pitch_delta": +2,
-        "volume": "+4%",
-        "ffmpeg_filter": "bass=g=1,treble=g=1",
-    },
-    "success": {
-        "gemini_prompt": (
-            "Act as a proud artisan who just completed a difficult crafting batch or building stage. "
-            "Speak with energetic pride, accomplishment, and satisfaction:"
-        ),
-        "rate_delta": +9,
-        "pitch_delta": +4,
-        "volume": "+8%",
-        "ffmpeg_filter": "treble=g=2,acompressor=threshold=-18dB:ratio=2:makeup=2dB",
-    },
-    "general": {
-        "gemini_prompt": (
-            "Act as an engaged, focused town worker going about their daily craft. "
-            "Speak in a natural, grounded, lively, expressive voice:"
-        ),
-        "rate_delta": +4,
-        "pitch_delta": +1,
-        "volume": "+3%",
-        "ffmpeg_filter": "bass=g=1,treble=g=1",
-    },
-    "noise": {
-        "gemini_prompt": (
-            "Act as a craftsman muttering thoughtfully to themselves while measuring and working. "
-            "Speak in a casual, natural, under-the-breath conversational tone:"
-        ),
-        "rate_delta": -4,
-        "pitch_delta": -1,
-        "volume": "-4%",
-        "ffmpeg_filter": "lowpass=f=4800",
-    },
-    "job": {
-        "gemini_prompt": (
-            "Act as a passionate medieval craftsman actively engaged in their trade. "
-            "Speak with authentic pride, focus, and lively character:"
-        ),
-        "rate_delta": +6,
-        "pitch_delta": +2,
-        "volume": "+6%",
-        "ffmpeg_filter": "bass=g=1,treble=g=2",
-    },
+    "danger": (
+        "Panicked, breathless, terrified and urgent shouting during a sudden raid attack on the town"
+    ),
+    "gotobed": (
+        "Exhausted, sleepy, yawning, worn-out nighttime voice at the end of a long shift"
+    ),
+    "badweather": (
+        "Shivering, cold, frustrated and windswept while stuck working outdoors in a freezing downpour"
+    ),
+    "lowsaturation": (
+        "Starving, weary, stomach-rumbling, drained worker longing for a hot meal"
+    ),
+    "highsaturation": (
+        "Deeply satisfied, warm, relieved, and cheerful right after eating a delicious hot meal"
+    ),
+    "badhousing": (
+        "Wistful, mildly disappointed, sighing about a cramped and drafty little cottage"
+    ),
+    "goodhousing": (
+        "Warm, proud, cozy, and deeply grateful for a spacious, comfortable home"
+    ),
+    "greeting": (
+        "Bright, welcoming, upbeat, and genuinely happy to greet a friend"
+    ),
+    "farewell": (
+        "Warm, caring, encouraging, and friendly while wishing someone safe travels"
+    ),
+    "missingequipment": (
+        "Frustrated, impatient, and stressed craftsman stuck waiting for missing tools or materials"
+    ),
+    "happy": (
+        "Joyful, smiling, enthusiastic, and high-spirited while enjoying a thriving town"
+    ),
+    "unhappy": (
+        "Heavy-hearted, melancholic, discouraged, and sighing softly after rough days or mourning"
+    ),
+    "sick": (
+        "Weak, feverish, congested, shaky, and exhausted villager suffering from a bad illness"
+    ),
+    "interaction": (
+        "Warm, neighborly, conversational, and appreciative while chatting with a fellow colonist or Guard"
+    ),
+    "success": (
+        "Proud, energetic, accomplished, and beaming with satisfaction after finishing a masterpiece"
+    ),
+    "general": (
+        "Engaged, natural, lively, and focused while going about daily town work"
+    ),
+    "noise": (
+        "Thoughtful, casual, muttering naturally under the breath while measuring and working"
+    ),
+    "job": (
+        "Passionate, proud, expressive medieval artisan enthusiastically immersed in their craft"
+    ),
 }
 
-# Expressive spoken lines tailored to convey emotion naturally
 EVENT_LINES = {
     "danger": [
         "Raiders in the colony! Everyone get inside and lock the doors, now!",
@@ -519,47 +405,19 @@ ROLE_TO_JOB_FAMILY = {
 }
 
 
-def synthesize_gemini_tts_sync(
-    genai_client,
-    voice_key: str,
-    emotion_key: str,
-    text: str,
-    ogg_path: Path,
-) -> None:
-    from google.genai import types
-
-    cfg = VOICES[voice_key]
-    emo = SITUATION_EMOTIONS[emotion_key]
-    prompt = f"{emo['gemini_prompt']}\n\"{text}\""
-
-    response = genai_client.models.generate_content(
-        model="gemini-2.5-flash-preview-tts",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_modalities=["AUDIO"],
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name=cfg["gemini_voice"]
-                    )
-                )
-            ),
-        ),
-    )
-
-    pcm_data = response.candidates[0].content.parts[0].inline_data.data
+def pcm_to_ogg_sync(pcm_bytes: bytes, ogg_path: Path) -> None:
     wav_path = ogg_path.with_suffix(".tmp.wav")
     with wave.open(str(wav_path), "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(24000)
-        wf.writeframes(pcm_data)
+        wf.writeframes(pcm_bytes)
 
     subprocess.run(
         [
             "ffmpeg", "-y",
             "-i", str(wav_path),
-            "-af", "silenceremove=start_periods=1:start_silence=0.04:start_threshold=-45dB",
+            "-af", "silenceremove=start_periods=1:start_silence=0.04:start_threshold=-42dB",
             "-ac", "1",
             "-ar", "24000",
             "-c:a", "libvorbis",
@@ -574,109 +432,110 @@ def synthesize_gemini_tts_sync(
         wav_path.unlink()
 
 
-async def synthesize_clip(
-    sem: asyncio.Semaphore,
+async def synthesize_voice_profile_live(
+    client: genai.Client,
     voice_key: str,
-    clip_name: str,
-    emotion_key: str,
-    text: str,
+    clip_specs: list[tuple[str, str, str]],
     force: bool,
-    genai_client=None,
-) -> str:
+    progress_counter: list[int],
+    total_clips: int,
+) -> None:
+    """
+    Streams all clips for a single citizen voice profile over chunked Gemini 3.8 Live WebSocket sessions.
+    Each item in clip_specs is (clip_name, emotion_key, text).
+    """
     out_dir = SOUNDS_ROOT / voice_key
     out_dir.mkdir(parents=True, exist_ok=True)
-    ogg_path = out_dir / f"{clip_name}.ogg"
-    if not force and ogg_path.exists() and ogg_path.stat().st_size > 1000:
-        return f"advancedcolonies:voice/{voice_key}/{clip_name}"
 
-    cfg = VOICES[voice_key]
-    emo = SITUATION_EMOTIONS[emotion_key]
+    pending = []
+    for clip_name, emotion_key, text in clip_specs:
+        ogg_path = out_dir / f"{clip_name}.ogg"
+        if not force and ogg_path.exists() and ogg_path.stat().st_size > 2000:
+            progress_counter[0] += 1
+        else:
+            pending.append((clip_name, emotion_key, text, ogg_path))
 
-    async with sem:
-        if genai_client is not None:
-            for attempt in range(4):
-                try:
-                    await asyncio.to_thread(
-                        synthesize_gemini_tts_sync,
-                        genai_client,
-                        voice_key,
-                        emotion_key,
-                        text,
-                        ogg_path,
+    if not pending:
+        print(f"[{voice_key}] All {len(clip_specs)} clips already up-to-date.")
+        return
+
+    voice_cfg = VOICES[voice_key]
+    chunk_size = 10
+
+    for chunk_start in range(0, len(pending), chunk_size):
+        chunk = pending[chunk_start:chunk_start + chunk_size]
+        idx = 0
+        attempt = 0
+
+        while idx < len(chunk):
+            model_name = LIVE_MODELS[attempt % len(LIVE_MODELS)]
+            live_config = types.LiveConnectConfig(
+                response_modalities=["AUDIO"],
+                system_instruction=types.Content(
+                    parts=[types.Part.from_text(text=f"{SYSTEM_INSTRUCTION} Your character persona: {voice_cfg['persona']}.")]
+                ),
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name=voice_cfg["gemini_voice"]
+                        )
                     )
-                    return f"advancedcolonies:voice/{voice_key}/{clip_name}"
-                except Exception as exc:
-                    if attempt == 3:
-                        raise RuntimeError(f"Gemini TTS failed for {voice_key}/{clip_name}: {exc}") from exc
-                    await asyncio.sleep(1.5 * (attempt + 1))
-
-        # Expressive situational prosody synthesis + acoustic filtering
-        rate_val = cfg["base_rate"] + emo["rate_delta"]
-        pitch_val = cfg["base_pitch"] + emo["pitch_delta"]
-        rate_str = f"{rate_val:+d}%"
-        pitch_str = f"{pitch_val:+d}Hz"
-        vol_str = emo["volume"]
-        af_chain = f"silenceremove=start_periods=1:start_silence=0.04:start_threshold=-45dB,{emo['ffmpeg_filter']}"
-
-        mp3_path = out_dir / f"{clip_name}.tmp.mp3"
-        for attempt in range(4):
+                ),
+            )
             try:
-                comm = edge_tts.Communicate(
-                    text,
-                    cfg["edge_voice"],
-                    rate=rate_str,
-                    pitch=pitch_str,
-                    volume=vol_str,
-                )
-                await comm.save(str(mp3_path))
-                subprocess.run(
-                    [
-                        "ffmpeg", "-y",
-                        "-i", str(mp3_path),
-                        "-af", af_chain,
-                        "-ac", "1",
-                        "-ar", "24000",
-                        "-c:a", "libvorbis",
-                        "-q:a", "3",
-                        str(ogg_path),
-                    ],
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                if mp3_path.exists():
-                    mp3_path.unlink()
-                break
-            except Exception as exc:
-                if attempt == 3:
-                    raise RuntimeError(f"Failed to synthesize {voice_key}/{clip_name}: {exc}") from exc
-                await asyncio.sleep(1.0 * (attempt + 1))
+                async with client.aio.live.connect(model=model_name, config=live_config) as session:
+                    while idx < len(chunk):
+                        clip_name, emotion_key, text, ogg_path = chunk[idx]
+                        emo_desc = SITUATION_EMOTIONS[emotion_key]
+                        prompt_text = f"Emotion ({emo_desc}): {text}"
 
-    return f"advancedcolonies:voice/{voice_key}/{clip_name}"
+                        await session.send_client_content(
+                            turns=types.Content(
+                                role="user",
+                                parts=[types.Part.from_text(text=prompt_text)],
+                            ),
+                            turn_complete=True,
+                        )
+
+                        audio_bytes = bytearray()
+                        async for response in session.receive():
+                            if response.data:
+                                audio_bytes.extend(response.data)
+                            if response.server_content and response.server_content.turn_complete:
+                                break
+
+                        if len(audio_bytes) < 4000:
+                            raise RuntimeError(f"Short audio buffer ({len(audio_bytes)} bytes) on {voice_key}/{clip_name}")
+
+                        await asyncio.to_thread(pcm_to_ogg_sync, bytes(audio_bytes), ogg_path)
+                        progress_counter[0] += 1
+                        idx += 1
+                        attempt = 0
+                        if progress_counter[0] % 20 == 0 or progress_counter[0] == total_clips:
+                            print(f"Progress: {progress_counter[0]}/{total_clips} emotional clips generated ({model_name})...")
+            except Exception as exc:
+                attempt += 1
+                if attempt >= 8:
+                    raise RuntimeError(f"[{voice_key}] Failed after 8 attempts at {chunk[idx][0]}: {exc}") from exc
+                await asyncio.sleep(1.5 * attempt)
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Synthesize emotional citizen .ogg voice lines.")
+    parser = argparse.ArgumentParser(description="Synthesize emotional citizen .ogg voice lines using Gemini 3.8 Live.")
     parser.add_argument("--api-key", default=os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"),
-                        help="Google Gemini API Key for gemini-2.5-flash-preview-tts")
+                        required=False, help="Google Gemini API Key")
     parser.add_argument("--force", action="store_true", help="Overwrite existing .ogg files")
     args = parser.parse_args()
 
-    genai_client = None
-    if args.api_key:
-        from google import genai
-        genai_client = genai.Client(api_key=args.api_key)
-        print("Using Google Gemini 2.5 Native Audio TTS (gemini-2.5-flash-preview-tts) with emotional acting prompts!")
-        sem = asyncio.Semaphore(4)
-    else:
-        print("Using situational emotional prosody & DSP shaping across 8 neural voices...")
-        sem = asyncio.Semaphore(12)
+    if not args.api_key:
+        raise SystemExit("Please provide --api-key or set GEMINI_API_KEY.")
 
-    tasks = []
+    client = genai.Client(api_key=args.api_key)
     voice_keys = ["male1", "male2", "male3", "male4", "female1", "female2", "female3", "female4"]
 
     event_sound_map = {}
     job_sound_map = {}
+    per_voice_specs: dict[str, list[tuple[str, str, str]]] = {vk: [] for vk in voice_keys}
 
     for v_idx, voice_key in enumerate(voice_keys):
         profile_num = v_idx % 4
@@ -689,8 +548,8 @@ async def main():
                 f"advancedcolonies:voice/{voice_key}/{c1}",
                 f"advancedcolonies:voice/{voice_key}/{c2}",
             ]
-            tasks.append(synthesize_clip(sem, voice_key, c1, event_id, line1, args.force, genai_client))
-            tasks.append(synthesize_clip(sem, voice_key, c2, event_id, line2, args.force, genai_client))
+            per_voice_specs[voice_key].append((c1, event_id, line1))
+            per_voice_specs[voice_key].append((c2, event_id, line2))
 
         for family_id, f_lines in JOB_FAMILY_LINES.items():
             line = f_lines[profile_num % len(f_lines)]
@@ -698,11 +557,27 @@ async def main():
             job_sound_map[(voice_key, family_id)] = [
                 f"advancedcolonies:voice/{voice_key}/{c_job}"
             ]
-            tasks.append(synthesize_clip(sem, voice_key, c_job, "job", line, args.force, genai_client))
+            per_voice_specs[voice_key].append((c_job, "job", line))
 
-    print(f"Synthesizing {len(tasks)} emotional .ogg voice files...")
-    await asyncio.gather(*tasks)
-    print("All 376 emotional .ogg files synthesized successfully!")
+    total_clips = sum(len(v) for v in per_voice_specs.values())
+    progress_counter = [0]
+    print(f"Starting Gemini 3.8 Live native emotional synthesis for {total_clips} .ogg clips across 8 voices...")
+
+    sem = asyncio.Semaphore(4)
+
+    async def run_voice(vk: str):
+        async with sem:
+            await synthesize_voice_profile_live(
+                client,
+                vk,
+                per_voice_specs[vk],
+                args.force,
+                progress_counter,
+                total_clips,
+            )
+
+    await asyncio.gather(*(run_voice(vk) for vk in voice_keys))
+    print(f"All {total_clips} Gemini 3.8 Live emotional .ogg files synthesized successfully!")
 
     adv_sounds = {}
     for (voice_key, event_id), sound_paths in sorted(event_sound_map.items()):
