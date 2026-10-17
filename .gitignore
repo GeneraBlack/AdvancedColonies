@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+out/
+bin/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# Run directories & logs
+run/
+run-data/
+runs/
+logs/
+crash-reports/
+hs_err_pid*
+replay_pid*
+
+# Local libraries / maven repo
+repo/
+
+gradle/wrapper/dists/
