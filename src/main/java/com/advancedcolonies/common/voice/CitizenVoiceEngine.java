@@ -228,7 +228,7 @@ public final class CitizenVoiceEngine {
 
         // 1. Check active combat, guard retreat, raid, or nearby hostile monsters
         if (isGuard && workerState.contains("FLEE")) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.GUARD_RETREAT, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.GUARD_RETREAT, nearestPlayer, null, null);
         }
 
         final boolean raidActive = colony != null && colony.getRaiderManager() != null && colony.getRaiderManager().isRaided();
@@ -238,7 +238,10 @@ public final class CitizenVoiceEngine {
                 e -> e instanceof Enemy && e.isAlive()).isEmpty();
 
         if (raidActive || hostilesNearby || workerState.contains("ATTACK") || citizenState.contains("FLEE")) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.RAID_COMBAT, nearestPlayer, null);
+            final CitizenVoiceContext combatContext = isGuard
+                    ? CitizenVoiceContext.GUARD_COMBAT
+                    : CitizenVoiceContext.RAID_COMBAT;
+            return new ResolvedVoiceSituation(combatContext, nearestPlayer, null, null);
         }
 
         // 2. Check Sickness / Hospital visit
@@ -246,36 +249,39 @@ public final class CitizenVoiceEngine {
                 || citizenState.contains("SICK")
                 || workerState.contains("SICK");
         if (isSick || explicitEventHint == EventType.SICKNESS) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.SICK_OR_INJURED, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.SICK_OR_INJURED, nearestPlayer, null, null);
         }
 
         // 3. Check Mourning
         if (citizenState.contains("MOURN") || citizen.getCitizenMournHandler().isMourning()) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.MOURNING, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.MOURNING, nearestPlayer, null, null);
         }
 
         // 4. Check Sleeping / Bedtime
         if (citizen.isAsleep() || citizenState.contains("SLEEP") || explicitEventHint == EventType.OFF_TO_BED) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.SLEEPING_OR_BEDTIME, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.SLEEPING_OR_BEDTIME, nearestPlayer, null, null);
         }
 
         // 5. Check Eating / Hunger
         if (citizenState.contains("EAT") && citizen.getSaturation() >= 7.0D) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.DINING_SATISFIED, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.DINING_SATISFIED, nearestPlayer, null, null);
         }
         if (citizen.getSaturation() < 3.0D || citizenState.contains("EAT") || explicitEventHint == EventType.SATURATION_LOW) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.HUNGRY, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.HUNGRY, nearestPlayer, null, null);
         }
 
-        // 6. Check Nearby Player Greeting (when player is within 6.5 blocks and looking near the citizen)
+        // 6. Check Nearby Player Greeting (when player is within 6.5 blocks)
         if (explicitEventHint == EventType.GREETING || (nearestPlayerDistSqr <= 42.25D && world.random.nextFloat() < 0.35F)) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.PLAYER_GREETING, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.PLAYER_GREETING, nearestPlayer, null, null);
         }
 
-        // 7. Check Outdoor Rain / Storm Exposure (only when actually outdoors under open sky!)
+        // 7. Check Outdoor Thunderstorm or Rain Exposure (only when actually outdoors under open sky!)
         final boolean exposedToRain = world.isRaining() && world.canSeeSky(pos.above());
         if (exposedToRain && (explicitEventHint == EventType.BAD_WEATHER || world.random.nextFloat() < 0.45F)) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.RAIN_AND_STORM, nearestPlayer, null);
+            final CitizenVoiceContext weatherContext = world.isThundering()
+                    ? CitizenVoiceContext.THUNDERSTORM
+                    : CitizenVoiceContext.RAIN_AND_STORM;
+            return new ResolvedVoiceSituation(weatherContext, nearestPlayer, null, null);
         }
 
         // 8. Check Missing Tools / Equipment / Waiting for Materials
@@ -284,37 +290,33 @@ public final class CitizenVoiceEngine {
                 || workerState.contains("GATHERING_REQUIRED_MATERIALS")
                 || explicitEventHint == EventType.MISSING_EQUIPMENT;
         if (waitingForMaterials && job != null && !isGuard) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.MISSING_TOOLS_OR_MATERIALS, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.MISSING_TOOLS_OR_MATERIALS, nearestPlayer, null, null);
         }
 
-        // 9. Check Guard-to-Worker & Worker-to-Guard Reassurance Interaction
-        if (entity != null && world.random.nextFloat() < 0.35F) {
-            if (isGuard) {
-                final List<EntityCitizen> nearbyWorkers = world.getEntitiesOfClass(
-                        EntityCitizen.class,
-                        entity.getBoundingBox().inflate(10.0D),
-                        other -> other != null
-                                && other != entity
-                                && other.isAlive()
-                                && other.getCitizenJobHandler() != null
-                                && other.getCitizenJobHandler().getColonyJob() != null
-                                && !(other.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>));
-                if (!nearbyWorkers.isEmpty()) {
-                    return new ResolvedVoiceSituation(CitizenVoiceContext.GUARD_REASSURANCE, nearestPlayer, null);
+        // 9. Discover nearby fellow citizens & patrolling guards for social/reassurance interactions
+        String nearbyGuardName = null;
+        String nearbyFriendName = null;
+        if (entity != null) {
+            final List<EntityCitizen> nearbyCitizens = world.getEntitiesOfClass(
+                    EntityCitizen.class,
+                    entity.getBoundingBox().inflate(11.0D),
+                    other -> other != null && other != entity && other.isAlive());
+            for (final EntityCitizen other : nearbyCitizens) {
+                final boolean otherIsGuard = other.getCitizenJobHandler() != null
+                        && other.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>;
+                if (otherIsGuard && nearbyGuardName == null) {
+                    nearbyGuardName = other.getName().getString();
+                } else if (!otherIsGuard && nearbyFriendName == null) {
+                    nearbyFriendName = other.getName().getString();
                 }
-            } else {
-                final List<EntityCitizen> nearbyGuards = world.getEntitiesOfClass(
-                        EntityCitizen.class,
-                        entity.getBoundingBox().inflate(12.0D),
-                        other -> other != null
-                                && other != entity
-                                && other.isAlive()
-                                && other.getCitizenJobHandler() != null
-                                && other.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>);
-                if (!nearbyGuards.isEmpty()) {
-                    final String guardName = nearbyGuards.getFirst().getName().getString();
-                    return new ResolvedVoiceSituation(CitizenVoiceContext.WORKER_THANKS_GUARD, nearestPlayer, guardName);
-                }
+            }
+        }
+
+        if (world.random.nextFloat() < 0.35F) {
+            if (isGuard && nearbyFriendName != null) {
+                return new ResolvedVoiceSituation(CitizenVoiceContext.GUARD_REASSURANCE, nearestPlayer, null, nearbyFriendName);
+            } else if (!isGuard && nearbyGuardName != null) {
+                return new ResolvedVoiceSituation(CitizenVoiceContext.WORKER_THANKS_GUARD, nearestPlayer, nearbyGuardName, nearbyFriendName);
             }
         }
 
@@ -322,29 +324,40 @@ public final class CitizenVoiceEngine {
         final IBuilding home = citizen.getHomeBuilding();
         if (home != null && home.getPosition().distSqr(pos) <= 144.0D && world.random.nextFloat() < 0.35F) {
             if (home.getBuildingLevelEquivalent() <= 2) {
-                return new ResolvedVoiceSituation(CitizenVoiceContext.HOME_COMFORT_BAD, nearestPlayer, null);
+                return new ResolvedVoiceSituation(CitizenVoiceContext.HOME_COMFORT_BAD, nearestPlayer, nearbyGuardName, nearbyFriendName);
             } else if (home.getBuildingLevelEquivalent() >= 4) {
-                return new ResolvedVoiceSituation(CitizenVoiceContext.HOME_COMFORT_GOOD, nearestPlayer, null);
+                return new ResolvedVoiceSituation(CitizenVoiceContext.HOME_COMFORT_GOOD, nearestPlayer, nearbyGuardName, nearbyFriendName);
             }
         }
 
-        // 11. Active Job Work vs Leisure / Mood
+        // 11. Early-morning commute flavor (0..2200 ticks)
+        final long dayTime = world.getDayTime() % 24000L;
+        if (dayTime < 2200L && job != null && world.random.nextFloat() < 0.30F) {
+            return new ResolvedVoiceSituation(CitizenVoiceContext.MORNING_COMMUTE, nearestPlayer, nearbyGuardName, nearbyFriendName);
+        }
+
+        // 12. Citizen-to-citizen social chatter when passing or hanging out near another colonist
+        if (nearbyFriendName != null && (citizenState.contains("LEISURE") || world.random.nextFloat() < 0.25F)) {
+            return new ResolvedVoiceSituation(CitizenVoiceContext.SOCIAL_CHATTER, nearestPlayer, nearbyGuardName, nearbyFriendName);
+        }
+
+        // 13. Active Job Work vs Leisure / Mood
         if (citizenState.contains("LEISURE")) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.LEISURE_AND_HAPPY, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.LEISURE_AND_HAPPY, nearestPlayer, nearbyGuardName, nearbyFriendName);
         }
 
         if (job != null && (!workerState.isEmpty() && !workerState.equals("IDLE") || isGuard)) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.ACTIVE_JOB_WORK, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.ACTIVE_JOB_WORK, nearestPlayer, nearbyGuardName, nearbyFriendName);
         }
 
         final double happiness = (citizen.getCitizenHappinessHandler() != null && colony != null)
                 ? citizen.getCitizenHappinessHandler().getHappiness(colony, citizen)
                 : 7.0D;
         if (happiness < 4.5D) {
-            return new ResolvedVoiceSituation(CitizenVoiceContext.UNHAPPY_MOOD, nearestPlayer, null);
+            return new ResolvedVoiceSituation(CitizenVoiceContext.UNHAPPY_MOOD, nearestPlayer, nearbyGuardName, nearbyFriendName);
         }
 
-        return new ResolvedVoiceSituation(CitizenVoiceContext.LEISURE_AND_HAPPY, nearestPlayer, null);
+        return new ResolvedVoiceSituation(CitizenVoiceContext.LEISURE_AND_HAPPY, nearestPlayer, nearbyGuardName, nearbyFriendName);
     }
 
     /**
@@ -420,27 +433,41 @@ public final class CitizenVoiceEngine {
             @NotNull final CitizenVoiceContext context) {
 
         final List<String> candidates = new ArrayList<>();
+        final String jobKey = (citizen.getJob() != null
+                && citizen.getJob().getJobRegistryEntry() != null
+                && citizen.getJob().getJobRegistryEntry().getKey() != null)
+                ? citizen.getJob().getJobRegistryEntry().getKey().getPath().toLowerCase(Locale.ROOT)
+                : resolveJobDisplayName(citizen).toLowerCase(Locale.ROOT);
 
-        // Check custom config overrides first
-        final String prefix = context.name() + ":";
+        // 1. Add built-in default or job-specific templates
+        if (context == CitizenVoiceContext.ACTIVE_JOB_WORK && citizen.getJob() != null) {
+            candidates.addAll(CitizenVoiceContext.getJobSpecificWorkTemplates(jobKey));
+        } else {
+            candidates.addAll(context.getDefaultTemplates());
+        }
+
+        // 2. Merge any custom templates from config (supports "CONTEXT:text" and "CONTEXT|jobKey|text")
+        final String colonPrefix = context.name() + ":";
+        final String pipePrefix = context.name() + "|";
         for (final String customEntry : AdvancedColoniesConfig.CITIZEN_COMMON.customVoicelineTemplates.get()) {
-            if (customEntry != null && customEntry.regionMatches(true, 0, prefix, 0, prefix.length())) {
-                final String text = customEntry.substring(prefix.length()).trim();
+            if (customEntry == null) {
+                continue;
+            }
+            if (customEntry.regionMatches(true, 0, colonPrefix, 0, colonPrefix.length())) {
+                final String text = customEntry.substring(colonPrefix.length()).trim();
                 if (!text.isEmpty()) {
                     candidates.add(text);
                 }
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            if (context == CitizenVoiceContext.ACTIVE_JOB_WORK && citizen.getJob() != null) {
-                final String jobKey = citizen.getJob().getJobRegistryEntry() != null
-                        && citizen.getJob().getJobRegistryEntry().getKey() != null
-                        ? citizen.getJob().getJobRegistryEntry().getKey().getPath()
-                        : resolveJobDisplayName(citizen);
-                candidates.addAll(CitizenVoiceContext.getJobSpecificWorkTemplates(jobKey));
-            } else {
-                candidates.addAll(context.getDefaultTemplates());
+            } else if (customEntry.regionMatches(true, 0, pipePrefix, 0, pipePrefix.length())) {
+                final String remainder = customEntry.substring(pipePrefix.length());
+                final int secondPipe = remainder.indexOf('|');
+                if (secondPipe > 0) {
+                    final String targetJob = remainder.substring(0, secondPipe).trim().toLowerCase(Locale.ROOT);
+                    final String text = remainder.substring(secondPipe + 1).trim();
+                    if (!text.isEmpty() && ("*".equals(targetJob) || jobKey.contains(targetJob))) {
+                        candidates.add(text);
+                    }
+                }
             }
         }
 
@@ -470,12 +497,19 @@ public final class CitizenVoiceEngine {
         final String citizenName = citizen.getName();
         final String jobName = resolveJobDisplayName(citizen);
         final String buildingName = resolveBuildingDisplayName(citizen);
+        final int buildingLevel = resolveBuildingLevel(citizen);
+        final String colonyName = (citizen.getColony() != null && citizen.getColony().getName() != null && !citizen.getColony().getName().isBlank())
+                ? citizen.getColony().getName()
+                : "our Colony";
         final String playerName = situation.nearestPlayer() != null
                 ? situation.nearestPlayer().getName().getString()
                 : "Mayor";
         final String guardName = situation.nearbyGuardName() != null
                 ? situation.nearbyGuardName()
                 : "the Guard";
+        final String friendName = situation.nearbyFriendName() != null
+                ? situation.nearbyFriendName()
+                : "neighbor";
         final String weatherName = world.isThundering() ? "thunderstorm" : (world.isRaining() ? "rain" : "clear sky");
         final long dayTime = world.getDayTime() % 24000L;
         final String timeOfDay = dayTime < 6000L
@@ -486,8 +520,11 @@ public final class CitizenVoiceEngine {
                 .replace("{citizen}", citizenName)
                 .replace("{job}", jobName)
                 .replace("{building}", buildingName)
+                .replace("{building_level}", String.valueOf(buildingLevel))
+                .replace("{colony}", colonyName)
                 .replace("{player}", playerName)
                 .replace("{guard}", guardName)
+                .replace("{friend}", friendName)
                 .replace("{weather}", weatherName)
                 .replace("{time}", timeOfDay);
     }
@@ -534,9 +571,22 @@ public final class CitizenVoiceEngine {
         return "Colony";
     }
 
+    private static int resolveBuildingLevel(@NotNull final ICitizenData citizen) {
+        final IBuilding workBuilding = citizen.getWorkBuilding();
+        if (workBuilding != null && workBuilding.getBuildingLevel() > 0) {
+            return workBuilding.getBuildingLevel();
+        }
+        final IBuilding homeBuilding = citizen.getHomeBuilding();
+        if (homeBuilding != null && homeBuilding.getBuildingLevel() > 0) {
+            return homeBuilding.getBuildingLevel();
+        }
+        return 1;
+    }
+
     private record ResolvedVoiceSituation(
             @NotNull CitizenVoiceContext context,
             @Nullable Player nearestPlayer,
-            @Nullable String nearbyGuardName) {
+            @Nullable String nearbyGuardName,
+            @Nullable String nearbyFriendName) {
     }
 }
