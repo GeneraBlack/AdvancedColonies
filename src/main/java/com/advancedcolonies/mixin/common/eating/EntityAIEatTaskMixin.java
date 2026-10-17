@@ -3,6 +3,7 @@ package com.advancedcolonies.mixin.common.eating;
 import com.advancedcolonies.buildings.restaurant.RestaurantSeatSelector;
 import com.advancedcolonies.common.eating.CitizenEatingHelper;
 import com.advancedcolonies.config.AdvancedColoniesConfig;
+import com.advancedcolonies.workers.deliveryman.DeliverymanLogisticsOptimizer;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
@@ -18,8 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Thin Mixin hook on {@link EntityAIEatTask} delegating load-balanced restaurant selection
- * and clean chair dismounting to {@link RestaurantSeatSelector} and {@link CitizenEatingHelper}.
+ * Thin Mixin hook on {@link EntityAIEatTask} delegating load-balanced restaurant selection,
+ * clean chair dismounting, and Warehouse courier dining to {@link RestaurantSeatSelector},
+ * {@link CitizenEatingHelper}, and {@link DeliverymanLogisticsOptimizer}.
  */
 @Mixin(value = EntityAIEatTask.class, remap = false)
 public abstract class EntityAIEatTaskMixin {
@@ -40,6 +42,16 @@ public abstract class EntityAIEatTaskMixin {
     private void advancedColonies$onEatReturn(final CallbackInfoReturnable<IState> cir) {
         if (cir.getReturnValue() == CitizenAIState.IDLE) {
             CitizenEatingHelper.ensureDismountedFromChair(this.citizen);
+        }
+    }
+
+    @Inject(method = "goToHut", at = @At("HEAD"), cancellable = true)
+    private void advancedColonies$allowCourierToEatAtWarehouse(
+            final CallbackInfoReturnable<EntityAIEatTask.EatingState> cir) {
+        final EntityAIEatTask.EatingState warehouseState =
+                DeliverymanLogisticsOptimizer.tryEatAtWarehouse(this.citizen);
+        if (warehouseState != null) {
+            cir.setReturnValue(warehouseState);
         }
     }
 

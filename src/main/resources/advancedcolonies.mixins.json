@@ -6,7 +6,16 @@
   "refmap": "advancedcolonies.refmap.json",
   "mixins": [
     "buildings.builder.SettingsModuleMixin",
+    "buildings.common.BuildingEntryBuilderMixin",
+    "buildings.common.MinimumStockModuleMixin",
+    "buildings.common.WorkerBuildingModuleMixin",
+    "buildings.cookhouse.BuildingKitchenMixin",
+    "buildings.crafter.AbstractCraftingBuildingModuleMixin",
+    "buildings.deliveryman.BuildingDeliverymanMixin",
+    "buildings.residence.LivingBuildingModuleMixin",
     "buildings.restaurant.BuildingCookMixin",
+    "buildings.warehouse.CourierAssignmentModuleMixin",
+    "buildings.warehouse.CourierAssignmentModuleViewMixin",
     "common.eating.EntityAIEatTaskMixin",
     "common.eating.FoodUtilsMixin",
     "common.navigation.AbstractPathJobMixin",
@@ -14,7 +23,13 @@
     "common.navigation.PathingStuckHandlerMixin",
     "workers.builder.AbstractEntityAIStructureMixin",
     "workers.builder.EntityAIStructureBuilderMixin",
-    "workers.cook.EntityAIWorkCookMixin"
+    "workers.common.AbstractEntityAIBasicMixin",
+    "workers.common.ItemStackUtilsEquipmentMixin",
+    "workers.cook.EntityAIWorkCookMixin",
+    "workers.deliveryman.EntityAIWorkDeliverymanMixin",
+    "workers.deliveryman.JobDeliverymanMixin",
+    "workers.smelter.AbstractEntityAIRequestSmelterMixin",
+    "workers.smelter.AbstractEntityAIUsesFurnaceMixin"
   ],
   "client": [
   ],
