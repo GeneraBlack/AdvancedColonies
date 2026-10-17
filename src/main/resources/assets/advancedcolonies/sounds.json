@@ -1,0 +1,2706 @@
+{
+  "voice.female1.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female1/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female2/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female3/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/female4/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male1/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male2/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male3/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.badhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/badhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/badhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.badweather": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/badweather_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/badweather_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.danger": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/danger_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/danger_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.farewell": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/farewell_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/farewell_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.general": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/general_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/general_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.goodhousing": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/goodhousing_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/goodhousing_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.gotobed": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/gotobed_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/gotobed_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.greeting": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/greeting_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/greeting_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.happy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/happy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/happy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.highsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/highsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/highsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.interaction": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/interaction_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/interaction_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.lowsaturation": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/lowsaturation_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/lowsaturation_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.missingequipment": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/missingequipment_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/missingequipment_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.noise": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/noise_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/noise_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.sick": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/sick_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/sick_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.success": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/success_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/success_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.unhappy": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/unhappy_01",
+        "stream": false
+      },
+      {
+        "name": "advancedcolonies:voice/male4/unhappy_02",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female1.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female1/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female2.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female2/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female3.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female3/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.female4.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/female4/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male1.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male1/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male2.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male2/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male3.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male3/job_researcher_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.blacksmith": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_blacksmith_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.builder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_builder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.carpenter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_carpenter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.cook": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_cook_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.deliveryman": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_deliveryman_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.enchanter": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_enchanter_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.farmer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_farmer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.guard": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_guard_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.healer": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_healer_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.herder": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_herder_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.lumberjack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_lumberjack_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.miner": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_miner_01",
+        "stream": false
+      }
+    ]
+  },
+  "voice.male4.job.researcher": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "advancedcolonies:voice/male4/job_researcher_01",
+        "stream": false
+      }
+    ]
+  }
+}
