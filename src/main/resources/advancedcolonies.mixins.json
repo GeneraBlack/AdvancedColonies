@@ -31,6 +31,7 @@
     "common.interaction.ToggleAbleMixin",
     "common.leisure.CitizenDataMixin",
     "common.navigation.AbstractPathJobMixin",
+    "common.navigation.PathJobMoveCloseToXNearYMixin",
     "common.navigation.PathJobMoveToLocationMixin",
     "common.navigation.PathingStuckHandlerMixin",
     "workers.builder.AbstractEntityAIStructureMixin",
