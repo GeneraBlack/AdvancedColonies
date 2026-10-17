@@ -1,5 +1,9 @@
 {
   "com.advancedcolonies.builder.setting.clear.topdown": "Top to Bottom",
   "com.advancedcolonies.builder.setting.clear.bottomup": "Bottom to Top",
-  "com.minecolonies.coremod.setting.advancedcolonies:clearmode": "Clearing Strategy:"
+  "com.minecolonies.coremod.setting.advancedcolonies:clearmode": "Clearing Strategy:",
+  "advancedcolonies.message.citizen_hurt_alert": "[AdvancedColonies] %1$s was hurt by %2$s at (%3$s, %4$s, %5$s)!",
+  "advancedcolonies.message.mind_reader.header": "[Mind Reader] %1$s (%2$s)",
+  "advancedcolonies.message.mind_reader.ai_state": "  AI State: %1$s | Work State: %2$s | Target: %3$s",
+  "advancedcolonies.message.mind_reader.vitals": "  HP: %1$s | Saturation: %2$s | Happiness: %3$s"
 }

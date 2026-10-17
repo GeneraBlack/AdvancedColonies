@@ -13,12 +13,21 @@
     "buildings.cookhouse.BuildingKitchenMixin",
     "buildings.crafter.AbstractCraftingBuildingModuleMixin",
     "buildings.deliveryman.BuildingDeliverymanMixin",
+    "buildings.graveyard.BlockMinecoloniesGraveMixin",
     "buildings.residence.LivingBuildingModuleMixin",
     "buildings.restaurant.BuildingCookMixin",
+    "buildings.tavern.RecruitmentInteractionMixin",
+    "buildings.tavern.VisitorCitizenMixin",
     "buildings.warehouse.CourierAssignmentModuleMixin",
     "buildings.warehouse.CourierAssignmentModuleViewMixin",
     "common.eating.EntityAIEatTaskMixin",
     "common.eating.FoodUtilsMixin",
+    "common.health.BeaconBlockEntityMixin",
+    "common.health.CitizenDiseaseHandlerMixin",
+    "common.health.EntityAISickTaskMixin",
+    "common.interaction.ColonyPermissionEventHandlerMixin",
+    "common.interaction.EntityCitizenMixin",
+    "common.leisure.CitizenDataMixin",
     "common.navigation.AbstractPathJobMixin",
     "common.navigation.PathJobMoveToLocationMixin",
     "common.navigation.PathingStuckHandlerMixin",
@@ -43,6 +52,7 @@
     "workers.smelter.AbstractEntityAIUsesFurnaceMixin"
   ],
   "client": [
+    "client.gui.CitizenWindowUtilsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,5 +1,9 @@
 {
   "com.advancedcolonies.builder.setting.clear.topdown": "Von oben nach unten",
   "com.advancedcolonies.builder.setting.clear.bottomup": "Von unten nach oben",
-  "com.minecolonies.coremod.setting.advancedcolonies:clearmode": "Freiräum-Strategie:"
+  "com.minecolonies.coremod.setting.advancedcolonies:clearmode": "Freiräum-Strategie:",
+  "advancedcolonies.message.citizen_hurt_alert": "[AdvancedColonies] %1$s wurde von %2$s bei (%3$s, %4$s, %5$s) verletzt!",
+  "advancedcolonies.message.mind_reader.header": "[Gedankenleser] %1$s (%2$s)",
+  "advancedcolonies.message.mind_reader.ai_state": "  KI-Status: %1$s | Arbeits-Status: %2$s | Ziel: %3$s",
+  "advancedcolonies.message.mind_reader.vitals": "  LP: %1$s | Sättigung: %2$s | Zufriedenheit: %3$s"
 }
