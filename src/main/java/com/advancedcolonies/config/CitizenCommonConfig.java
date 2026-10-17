@@ -52,6 +52,12 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.BooleanValue disableGuardSleepingOnDuty;
     public final ModConfigSpec.BooleanValue harmlessGuardWakeUp;
     public final ModConfigSpec.BooleanValue honorGuardRetreatWithoutResearch;
+    public final ModConfigSpec.BooleanValue enableSmartGuardPatrolDispersion;
+    public final ModConfigSpec.IntValue guardPatrolMinSeparationBlocks;
+    public final ModConfigSpec.BooleanValue enableGuardCoverageHappinessBonus;
+    public final ModConfigSpec.BooleanValue enableTacticalGroupResponseOnSwarmsAndRaids;
+    public final ModConfigSpec.IntValue guardSwarmMobThreshold;
+    public final ModConfigSpec.IntValue guardSwarmReinforcementRadius;
     public final ModConfigSpec.BooleanValue enableResearcherSkillScaling;
     public final ModConfigSpec.BooleanValue exemptEssentialWorkersFromMourning;
     public final ModConfigSpec.IntValue maxMourningDurationSeconds;
@@ -194,6 +200,30 @@ public final class CitizenCommonConfig {
         this.honorGuardRetreatWithoutResearch = builder
                 .comment("Allows Guards to retreat on low health when 'Retreat on low health' is enabled in the Guard Tower GUI, even before the University Retreat research is unlocked.")
                 .define("honorGuardRetreatWithoutResearch", true);
+
+        this.enableSmartGuardPatrolDispersion = builder
+                .comment("Prevents Guards from marching as a single clumped blob during peaceful patrolling; distributes Guards across unvisited buildings and sectors for maximum colony coverage.")
+                .define("enableSmartGuardPatrolDispersion", true);
+
+        this.guardPatrolMinSeparationBlocks = builder
+                .comment("Preferred minimum separation distance in blocks between patrolling Guards and their chosen patrol targets during peaceful operation.")
+                .defineInRange("guardPatrolMinSeparationBlocks", 24, 8, 128);
+
+        this.enableGuardCoverageHappinessBonus = builder
+                .comment("Grants a bonus to citizen Security happiness when Guards are well-distributed across the colony's buildings and residential areas.")
+                .define("enableGuardCoverageHappinessBonus", true);
+
+        this.enableTacticalGroupResponseOnSwarmsAndRaids = builder
+                .comment("When a colony raid or a large mob swarm is detected, Guards dynamically converge as a coordinated tactical group to eliminate the threat before dispersing again.")
+                .define("enableTacticalGroupResponseOnSwarmsAndRaids", true);
+
+        this.guardSwarmMobThreshold = builder
+                .comment("Minimum number of hostile mobs near an engaged Guard (or active raid) required to trigger a tactical group reinforcement call.")
+                .defineInRange("guardSwarmMobThreshold", 3, 2, 16);
+
+        this.guardSwarmReinforcementRadius = builder
+                .comment("Radius in blocks within which fellow Guards respond as a group to a mob swarm or raid hotspot.")
+                .defineInRange("guardSwarmReinforcementRadius", 64, 16, 256);
 
         this.enableResearcherSkillScaling = builder
                 .comment("Scales the University Researcher's bookshelf study speed dynamically with their Knowledge skill instead of waiting a flat 60 seconds per shelf.")

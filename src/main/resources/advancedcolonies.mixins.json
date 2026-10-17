@@ -30,6 +30,7 @@
     "common.interaction.EntityCitizenMixin",
     "common.interaction.ToggleAbleMixin",
     "common.leisure.CitizenDataMixin",
+    "common.leisure.CitizenHappinessHandlerMixin",
     "common.leisure.CitizenManagerMixin",
     "common.leisure.EntityAIMournCitizenMixin",
     "common.navigation.AbstractPathJobMixin",
