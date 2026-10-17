@@ -10,6 +10,7 @@
     "buildings.common.BuildingEntryBuilderMixin",
     "buildings.common.MinimumStockModuleMixin",
     "buildings.common.WorkerBuildingModuleMixin",
+    "buildings.concretemixer.BuildingConcreteMixerMixin",
     "buildings.cookhouse.BuildingKitchenMixin",
     "buildings.crafter.AbstractCraftingBuildingModuleMixin",
     "buildings.deliveryman.BuildingDeliverymanMixin",
@@ -28,6 +29,7 @@
     "common.health.EntityAISickTaskMixin",
     "common.interaction.ColonyPermissionEventHandlerMixin",
     "common.interaction.EntityCitizenMixin",
+    "common.interaction.ItemLargeBottleMixin",
     "common.interaction.ToggleAbleMixin",
     "common.leisure.CitizenDataMixin",
     "common.leisure.CitizenHappinessHandlerMixin",
@@ -44,18 +46,27 @@
     "workers.common.AbstractEntityAICraftingMixin",
     "workers.common.AbstractEntityAIInteractMixin",
     "workers.common.ItemStackUtilsEquipmentMixin",
+    "workers.concretemixer.EntityAIConcreteMixerMixin",
     "workers.cook.EntityAIWorkCookMixin",
     "workers.deliveryman.EntityAIWorkDeliverymanMixin",
     "workers.deliveryman.JobDeliverymanMixin",
+    "workers.enchanter.EntityAIWorkEnchanterMixin",
     "workers.farmer.EntityAIWorkFarmerMixin",
     "workers.farmer.EntityAIWorkPlanterMixin",
+    "workers.farmer.FarmFieldMixin",
+    "workers.farmer.MinecoloniesCropBlockMixin",
     "workers.farmer.MinecoloniesEventHandlerMixin",
     "workers.guard.AbstractEntityAIGuardMixin",
+    "workers.guard.RaiderMeleeAIMixin",
+    "workers.guard.RaiderRangedAIMixin",
     "workers.healer.EntityAIWorkHealerMixin",
     "workers.herder.AbstractEntityAIHerderMixin",
+    "workers.herder.EntityAIWorkBeekeeperMixin",
     "workers.herder.EntityAIWorkChickenHerderMixin",
+    "workers.herder.EntityAIWorkCowboyMixin",
     "workers.herder.EntityAIWorkRabbitHerderMixin",
     "workers.lumberjack.EntityAIWorkLumberjackMixin",
+    "workers.lumberjack.TreeMangroveStumpMixin",
     "workers.miner.EntityAIQuarrierMixin",
     "workers.miner.EntityAIStructureMinerMixin",
     "workers.netherworker.EntityAIWorkNetherMixin",
@@ -64,9 +75,11 @@
     "workers.smelter.AbstractEntityAIUsesFurnaceMixin"
   ],
   "client": [
-    "client.gui.CitizenWindowUtilsMixin"
+    "client.gui.CitizenWindowUtilsMixin",
+    "client.gui.GuiItemSearchWindowsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   }
 }
+

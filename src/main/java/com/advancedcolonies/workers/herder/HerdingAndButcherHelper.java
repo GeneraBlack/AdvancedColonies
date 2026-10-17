@@ -131,4 +131,50 @@ public final class HerdingAndButcherHelper {
         }
         CitizenItemUtils.pickupItems(worker);
     }
+
+    /**
+     * Checks whether Cowboy multi-milking and multi-stewing per visit is enabled.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isCowboyMultiMilkingEnabled() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.enableCowboyMultiMilking.get();
+    }
+
+    /**
+     * Computes the maximum number of milking or stewing actions a Cowboy can perform in a single visit,
+     * scaled by Primary Skill and strictly clamped to the server limit {@code cowboyMaxMilkPerVisit}.
+     *
+     * @param primarySkillLevel the Cowboy's Primary Skill level
+     * @return clamped action count per visit (between 1 and {@code cowboyMaxMilkPerVisit})
+     */
+    public static int computeMaxMilkActionsPerVisit(final int primarySkillLevel) {
+        if (!isCowboyMultiMilkingEnabled()) {
+            return 1;
+        }
+        final int divisor = Math.max(1, AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.cowboyMilkingSkillDivisor.get());
+        final int serverMax = Math.max(1, Math.min(32,
+                AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.cowboyMaxMilkPerVisit.get()));
+        final int skillActions = 1 + Math.max(0, primarySkillLevel) / divisor;
+        return Math.max(1, Math.min(skillActions, serverMax));
+    }
+
+    /**
+     * Checks whether the item cooldown on MineColonies' Large Empty Bottle should be disabled.
+     *
+     * @return {@code true} if cooldown removal is enabled
+     */
+    public static boolean isLargeBottleCooldownDisabled() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.disableLargeBottleCooldown.get();
+    }
+
+    /**
+     * Checks whether Beekeeper hive-harvest prioritization and bee penning is enabled.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isBeekeeperHarvestPriorityEnabled() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.enableBeekeeperHarvestPriority.get();
+    }
 }
+

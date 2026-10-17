@@ -61,6 +61,10 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.BooleanValue enableResearcherSkillScaling;
     public final ModConfigSpec.BooleanValue exemptEssentialWorkersFromMourning;
     public final ModConfigSpec.IntValue maxMourningDurationSeconds;
+    public final ModConfigSpec.BooleanValue enableRaiderThreatRebalancing;
+    public final ModConfigSpec.IntValue raiderActiveGuardThreatBonus;
+    public final ModConfigSpec.IntValue raiderFleeingGuardMaxThreat;
+    public final ModConfigSpec.BooleanValue enableEnhancedGuiItemSearch;
 
     public CitizenCommonConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Shared Citizen AI, Eating, Health, Leisure & QoL Settings").push("citizenCommon");
@@ -237,6 +241,23 @@ public final class CitizenCommonConfig {
                 .comment("Maximum duration in seconds that mourning citizens spend grieving before returning to work (0 = disable mourning completely, 1200 = full vanilla day).")
                 .defineInRange("maxMourningDurationSeconds", 120, 0, 1200);
 
+        this.enableRaiderThreatRebalancing = builder
+                .comment("Rebalances Raider threat tables so Raiders prioritize active Guards, reduce aggro on retreating low-health Guards (GUARD_FLEE), and ignore Creative/Spectator players.")
+                .define("enableRaiderThreatRebalancing", true);
+
+        this.raiderActiveGuardThreatBonus = builder
+                .comment("Server limit/value for the extra threat added to active (non-fleeing) Guards so Raiders prioritize engaging Guards over civilians.")
+                .defineInRange("raiderActiveGuardThreatBonus", 40, 0, 200);
+
+        this.raiderFleeingGuardMaxThreat = builder
+                .comment("Server limit/cap on the threat value of a retreating Guard (GUARD_FLEE) so Raiders switch to active defenders instead of chasing wounded Guards.")
+                .defineInRange("raiderFleeingGuardMaxThreat", 20, 0, 100);
+
+        this.enableEnhancedGuiItemSearch = builder
+                .comment("Enhances item search boxes in MineColonies and Structurize windows with multi-keyword matching, @modid filtering, and optional JustEnoughCharacters (JEC) Pinyin support.")
+                .define("enableEnhancedGuiItemSearch", true);
+
         builder.pop();
     }
 }
+

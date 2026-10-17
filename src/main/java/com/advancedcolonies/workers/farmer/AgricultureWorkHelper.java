@@ -204,4 +204,217 @@ public final class AgricultureWorkHelper {
 
         return false;
     }
+
+    /**
+     * Checks whether the division-by-zero-free spiral field scan ({@code nextValidCell}) is enabled.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isSpiralFieldScanFixed() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.fixFarmerSpiralFieldScan.get();
+    }
+
+    /**
+     * Computes the next valid spiral cell offset within {@code farmField} without division-by-zero hazards.
+     *
+     * @param building  the Farmer Hut building
+     * @param farmField the target farm field
+     * @return the next relative {@link BlockPos} offset, or {@code null} when the spiral scan completes
+     */
+    @Nullable
+    public static BlockPos computeNextSpiralValidCell(
+            @NotNull final com.minecolonies.core.colony.buildings.workerbuildings.BuildingFarmer building,
+            @NotNull final FarmField farmField) {
+
+        if (building.getWorkingOffset() == null) {
+            building.setWorkingOffset(BlockPos.ZERO);
+        }
+
+        int x = building.getWorkingOffset().getX();
+        int z = building.getWorkingOffset().getZ();
+
+        do {
+            if (z > FarmField.MAX_RANGE) {
+                return null;
+            }
+
+            final boolean onDiagonal = Math.abs(x) == Math.abs(z);
+            final boolean nonNegativeX = x >= 0;
+            final boolean positiveZ = z > 0;
+            if (onDiagonal) {
+                if (nonNegativeX) {
+                    z++;
+                } else if (positiveZ) {
+                    z--;
+                } else {
+                    x++;
+                }
+                continue;
+            }
+
+            if (Math.abs(x) > Math.abs(z)) {
+                if (nonNegativeX) {
+                    z++;
+                } else {
+                    z--;
+                }
+            } else {
+                if (positiveZ) {
+                    x--;
+                } else {
+                    x++;
+                }
+            }
+        } while (-z > farmField.getRadius(net.minecraft.core.Direction.NORTH)
+                || x > farmField.getRadius(net.minecraft.core.Direction.EAST)
+                || z > farmField.getRadius(net.minecraft.core.Direction.SOUTH)
+                || -x > farmField.getRadius(net.minecraft.core.Direction.WEST));
+
+        return new BlockPos(x, 0, z);
+    }
+
+    /**
+     * Attempts to harvest a mature crop or bush at {@code surfacePos.above()} via right-click interaction
+     * using a {@code FakePlayer} so compatible crops reset their age instead of breaking completely.
+     *
+     * @param world      the server level
+     * @param worker     the Farmer citizen entity
+     * @param farmField  the active farm field
+     * @param surfacePos the farmland surface block position
+     * @return {@code true} if right-click harvesting succeeded and consumed the action
+     */
+    public static boolean tryRightClickHarvestCrop(
+            @Nullable final net.minecraft.server.level.ServerLevel world,
+            @Nullable final AbstractEntityCitizen worker,
+            @Nullable final FarmField farmField,
+            @Nullable final BlockPos surfacePos) {
+
+        if (!AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.enableFarmerRightClickHarvest.get()
+                || world == null
+                || worker == null
+                || farmField == null
+                || surfacePos == null) {
+            return false;
+        }
+
+        final BlockPos cropPos = surfacePos.above();
+        final net.minecraft.world.level.block.state.BlockState state = world.getBlockState(cropPos);
+        if (!(state.getBlock() instanceof net.minecraft.world.level.block.BushBlock)
+                && !(state.getBlock() instanceof CropBlock)) {
+            return false;
+        }
+
+        final net.minecraft.world.phys.BlockHitResult hitResult = new net.minecraft.world.phys.BlockHitResult(
+                net.minecraft.world.phys.Vec3.atCenterOf(cropPos),
+                net.minecraft.core.Direction.UP,
+                cropPos,
+                false);
+        final net.neoforged.neoforge.common.util.FakePlayer fakePlayer =
+                net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(world);
+        final ItemStack cloneSeed = state.getCloneItemStack(hitResult, world, cropPos, fakePlayer);
+
+        if (farmField.getSeed().isEmpty() || farmField.getSeed().getItem() != cloneSeed.getItem()) {
+            return false;
+        }
+
+        final net.minecraft.world.InteractionResult result = state.useWithoutItem(world, fakePlayer, hitResult);
+        if (result.consumesAction()) {
+            sweepNearbyDropsToWorker(world, worker, cropPos, 3.0D);
+            CitizenItemUtils.pickupItems(worker);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Scales harvested crop drops according to the Farmer's Primary Skill and {@code farmerSkillHarvestBonusStep},
+     * strictly clamped to the server limit {@code farmerMaxHarvestMultiplier}.
+     *
+     * @param baseDrops         the drops already processed by vanilla {@code increaseBlockDrops}
+     * @param primarySkillLevel the Farmer's Primary Skill level
+     * @return the scaled crop drops list respecting the server limit
+     */
+    @NotNull
+    public static List<ItemStack> scaleFarmerHarvestDrops(
+            @NotNull final List<ItemStack> baseDrops,
+            final int primarySkillLevel) {
+
+        final int step = AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.farmerSkillHarvestBonusStep.get();
+        final int serverMaxMultiplier = Math.max(1, Math.min(16,
+                AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.farmerMaxHarvestMultiplier.get()));
+
+        if (step <= 0 || serverMaxMultiplier <= 1 || baseDrops.isEmpty()) {
+            return baseDrops;
+        }
+
+        final int skillMultiplier = 1 + Math.max(0, primarySkillLevel) / step;
+        final int effectiveMultiplier = Math.max(1, Math.min(skillMultiplier, serverMaxMultiplier));
+        if (effectiveMultiplier <= 1) {
+            return baseDrops;
+        }
+
+        for (final ItemStack stack : baseDrops) {
+            if (!stack.isEmpty()) {
+                stack.setCount(Math.min(stack.getMaxStackSize(), stack.getCount() * effectiveMultiplier));
+            }
+        }
+        return baseDrops;
+    }
+
+    /**
+     * Checks whether {@code MinecoloniesCropBlock#updateShape} survival fix is enabled.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isMinecoloniesCropSurvivalFixed() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.fixMinecoloniesCropBlockSurvival.get();
+    }
+
+    /**
+     * Evaluates whether a {@link MinecoloniesCropBlock} at {@code pos} can survive on the block below it.
+     *
+     * @param level             the level reader
+     * @param pos               the crop position
+     * @param preferredFarmland the crop's preferred farmland block
+     * @return {@code true} if the soil below is valid and light is sufficient
+     */
+    public static boolean canMinecoloniesCropSurviveOnFarmland(
+            @NotNull final net.minecraft.world.level.LevelReader level,
+            @NotNull final BlockPos pos,
+            @Nullable final Block preferredFarmland) {
+
+        final BlockPos belowPos = pos.below();
+        final Block belowBlock = level.getBlockState(belowPos).getBlock();
+        final boolean validSoil = belowBlock == preferredFarmland
+                || belowBlock instanceof com.minecolonies.core.blocks.MinecoloniesFarmland;
+        return validSoil && (level.getRawBrightness(pos, 0) >= 8 || level.canSeeSky(pos));
+    }
+
+    /**
+     * Checks whether multi-season crop rotation on {@link FarmField} is enabled.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isCropRotationEnabled() {
+        return AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.enableFarmFieldCropRotation.get();
+    }
+
+    /**
+     * Returns the strict server limit on the maximum number of crop rotation seasons per {@link FarmField}.
+     *
+     * @return clamped max seasons (1..8)
+     */
+    public static int getClampedMaxSeasons() {
+        return Math.max(1, Math.min(8, AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.cropRotationMaxSeasons.get()));
+    }
+
+    /**
+     * Returns the strict server limit on the maximum duration in days of a single crop rotation season.
+     *
+     * @return clamped max season days (1..365)
+     */
+    public static int getClampedMaxSeasonDays() {
+        return Math.max(1, Math.min(365, AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.cropRotationMaxSeasonDays.get()));
+    }
 }
+

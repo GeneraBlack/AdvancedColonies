@@ -166,4 +166,75 @@ public final class LumberjackForestryHelper {
         worker.swing(worker.getUsedItemHand());
         return true;
     }
+
+    /**
+     * Populates {@code stumpLocations} for Mangrove trees by scanning downward from {@code topLog}
+     * to {@code yLevel} for the first valid {@code DIRT} or {@code MUD} block beneath air or water,
+     * ensuring Mangrove Propagules are replanted on solid ground rather than mid-air roots.
+     *
+     * @param world          the world
+     * @param woodBlocks     the discovered wood block positions of the felled tree
+     * @param stumpLocations the mutable list of stump positions to populate
+     * @param sapling        the sapling stack associated with the tree
+     * @param topLog         the highest log position of the tree
+     * @param yLevel         the base Y level of the tree
+     * @return {@code true} if Mangrove stump resolution was applied
+     */
+    public static boolean tryFillMangroveTreeStumps(
+            @Nullable final Level world,
+            @Nullable final List<BlockPos> woodBlocks,
+            @Nullable final List<BlockPos> stumpLocations,
+            @Nullable final ItemStack sapling,
+            @Nullable final BlockPos topLog,
+            final int yLevel) {
+
+        if (!AdvancedColoniesConfig.AGRICULTURE_AND_HERDING.fixMangroveTreeReplanting.get()
+                || world == null
+                || woodBlocks == null
+                || stumpLocations == null
+                || sapling == null
+                || topLog == null
+                || !sapling.is(Items.MANGROVE_PROPAGULE)) {
+            return false;
+        }
+
+        for (final BlockPos pos : woodBlocks) {
+            if (pos.getY() <= topLog.getY()
+                    && pos.getY() >= yLevel
+                    && world.getBlockState(pos).is(Blocks.MANGROVE_LOG)) {
+                stumpLocations.add(pos);
+            }
+        }
+
+        if (!stumpLocations.isEmpty()) {
+            BlockPos lowestStump = stumpLocations.getFirst();
+            for (final BlockPos stump : stumpLocations) {
+                if (stump.getY() < lowestStump.getY()) {
+                    lowestStump = stump;
+                }
+            }
+
+            final int targetX = lowestStump.getX();
+            final int targetZ = lowestStump.getZ();
+            BlockPos plantPos = null;
+
+            for (int y = topLog.getY(); y >= yLevel; y--) {
+                final BlockPos checkPos = new BlockPos(targetX, y, targetZ);
+                final BlockState checkBlock = world.getBlockState(checkPos);
+                final BlockState belowBlock = world.getBlockState(checkPos.below());
+
+                if ((belowBlock.is(BlockTags.DIRT) || belowBlock.is(Blocks.MUD))
+                        && (checkBlock.canBeReplaced() || checkBlock.is(Blocks.WATER))) {
+                    plantPos = checkPos;
+                    break;
+                }
+            }
+
+            stumpLocations.clear();
+            stumpLocations.add(plantPos != null ? plantPos : new BlockPos(targetX, yLevel, targetZ));
+        }
+
+        return true;
+    }
 }
+

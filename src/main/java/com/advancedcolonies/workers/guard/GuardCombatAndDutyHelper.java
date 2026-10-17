@@ -110,4 +110,110 @@ public final class GuardCombatAndDutyHelper {
         return buildingGuards.getID() != null
                 && worker.distanceToSqr(buildingGuards.getID().getCenter()) > MIN_RETREAT_DIST_SQR;
     }
+
+    /**
+     * Checks whether Raider threat and aggro rebalancing is enabled in the server configuration.
+     *
+     * @return {@code true} if enabled
+     */
+    public static boolean isRaiderThreatRebalancingEnabled() {
+        return AdvancedColoniesConfig.CITIZEN_COMMON.enableRaiderThreatRebalancing.get();
+    }
+
+    /**
+     * Evaluates a Raider's current target: drops Creative/Spectator players and caps threat on
+     * retreating low-health Guards ({@code GUARD_FLEE}) to the server limit {@code raiderFleeingGuardMaxThreat}.
+     *
+     * @param raider        the Raider entity
+     * @param currentTarget the Raider's current combat target
+     * @param <T>           the Raider entity type
+     * @return {@code false} if the current target is invalid (Creative/Spectator) and should be reset
+     */
+    public static <T extends com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster & com.minecolonies.api.entity.ai.combat.threat.IThreatTableEntity> boolean evaluateRaiderCurrentTarget(
+            @Nullable final T raider,
+            @Nullable final net.minecraft.world.entity.LivingEntity currentTarget) {
+
+        if (!isRaiderThreatRebalancingEnabled() || raider == null || currentTarget == null || !currentTarget.isAlive()) {
+            return true;
+        }
+
+        if (currentTarget instanceof net.minecraft.world.entity.player.Player player) {
+            if (player.isCreative() || player.isSpectator()) {
+                return false;
+            }
+        } else if (currentTarget instanceof AbstractEntityCitizen citizen
+                && citizen.getCitizenJobHandler() != null
+                && citizen.getCitizenJobHandler().getColonyJob() instanceof com.minecolonies.core.colony.jobs.AbstractJobGuard<?> guard
+                && guard.getWorkerAI() != null
+                && guard.getWorkerAI().getState() == com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.GUARD_FLEE) {
+
+            final int maxFleeThreat = Math.max(0, Math.min(100,
+                    AdvancedColoniesConfig.CITIZEN_COMMON.raiderFleeingGuardMaxThreat.get()));
+            final int currentThreat = raider.getThreatTable().getThreatFor(currentTarget);
+            if (currentThreat > maxFleeThreat) {
+                raider.getThreatTable().addThreat(currentTarget, maxFleeThreat - currentThreat);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Boosts threat on active (non-fleeing) Guards within the Raider's search area according to
+     * the server-configured {@code raiderActiveGuardThreatBonus} limit.
+     *
+     * @param raider     the Raider entity
+     * @param searchArea the Raider's target search bounding box
+     * @param <T>        the Raider entity type
+     */
+    public static <T extends com.minecolonies.api.entity.mobs.AbstractEntityMinecoloniesMonster & com.minecolonies.api.entity.ai.combat.threat.IThreatTableEntity> void applyRaiderNearbyGuardThreat(
+            @Nullable final T raider,
+            @Nullable final net.minecraft.world.phys.AABB searchArea) {
+
+        if (!isRaiderThreatRebalancingEnabled() || raider == null || searchArea == null) {
+            return;
+        }
+
+        final int activeGuardBonus = Math.max(0, Math.min(200,
+                AdvancedColoniesConfig.CITIZEN_COMMON.raiderActiveGuardThreatBonus.get()));
+        if (activeGuardBonus <= 0) {
+            return;
+        }
+
+        final java.util.List<net.minecraft.world.entity.LivingEntity> entities =
+                raider.level().getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, searchArea);
+        for (final net.minecraft.world.entity.LivingEntity entity : entities) {
+            if (entity instanceof AbstractEntityCitizen citizen
+                    && citizen.isAlive()
+                    && !citizen.isInvisible()
+                    && citizen.getCitizenJobHandler() != null
+                    && citizen.getCitizenJobHandler().getColonyJob() instanceof com.minecolonies.core.colony.jobs.AbstractJobGuard<?> guard) {
+
+                if (guard.getWorkerAI() != null
+                        && guard.getWorkerAI().getState() != com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.GUARD_FLEE) {
+                    raider.getThreatTable().addThreat(entity, activeGuardBonus);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks whether an entity is a valid attackable target for a Raider when threat rebalancing is enabled.
+     *
+     * @param target the candidate target entity
+     * @return {@code true} if the target is attackable
+     */
+    public static boolean isRaiderAttackableTarget(@Nullable final net.minecraft.world.entity.LivingEntity target) {
+        if (target == null) {
+            return false;
+        }
+        if (target instanceof AbstractEntityCitizen) {
+            return !target.isInvisible();
+        }
+        if (target instanceof net.minecraft.world.entity.player.Player player) {
+            return !player.isCreative() && !player.isSpectator();
+        }
+        return false;
+    }
 }
+
