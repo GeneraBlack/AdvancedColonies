@@ -1,15 +1,19 @@
 package com.advancedcolonies.mixin.common.leisure;
 
+import com.advancedcolonies.common.eating.CitizenEatingHelper;
 import com.advancedcolonies.common.leisure.CitizenLeisureHelper;
+import com.advancedcolonies.config.AdvancedColoniesConfig;
 import com.minecolonies.core.colony.CitizenData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Thin Mixin hook on {@link CitizenData} to apply configurable leisure duration and cooldowns.
+ * Thin Mixin hook on {@link CitizenData} to apply configurable leisure duration/cooldowns
+ * and fix the {@code needsBetterFood()} copy-paste bug.
  */
 @Mixin(value = CitizenData.class, remap = false)
 public abstract class CitizenDataMixin {
@@ -35,5 +39,21 @@ public abstract class CitizenDataMixin {
     private void advancedcolonies$applyConfigurableLeisureTime(final int tickRate, final CallbackInfo ci) {
         final CitizenData self = (CitizenData) (Object) this;
         this.leisureTime = CitizenLeisureHelper.computeUpdatedLeisureTime(self, this.leisureTime, tickRate);
+    }
+
+    /**
+     * Fixes the vanilla copy-paste bug in {@code CitizenData#needsBetterFood()} where {@code slotBadFood}
+     * and {@code slotGoodFood} tested the identical condition and always returned {@code false}.
+     */
+    @Inject(
+            method = "needsBetterFood",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void advancedcolonies$fixNeedsBetterFood(final CallbackInfoReturnable<Boolean> cir) {
+        if (AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedEatingAI.get()) {
+            final CitizenData self = (CitizenData) (Object) this;
+            cir.setReturnValue(CitizenEatingHelper.evaluateNeedsBetterFood(self));
+        }
     }
 }

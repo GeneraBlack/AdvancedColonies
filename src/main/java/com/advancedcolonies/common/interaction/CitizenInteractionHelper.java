@@ -110,4 +110,29 @@ public final class CitizenInteractionHelper {
     public static boolean shouldSuppressPermissionLevitation() {
         return AdvancedColoniesConfig.CITIZEN_COMMON.disablePermissionLevitation.get();
     }
+
+    /**
+     * Prevents {@code EntityAIInteractToggleAble.ToggleAble#canOpen(BlockState)} from returning {@code true}
+     * when a door or fence gate is already open ({@code BlockStateProperties.OPEN == true}), which in
+     * vanilla MineColonies causes citizens to slam already-open doors and fence gates shut on themselves
+     * while still within {@code MAX_DISTANCE}.
+     *
+     * @param state          the block state being tested
+     * @param vanillaCanOpen the original result of {@code canOpen(state)}
+     * @return {@code true} only if the block is toggleable and currently closed
+     */
+    public static boolean canOpenToggleableBlock(
+            final net.minecraft.world.level.block.state.BlockState state,
+            final boolean vanillaCanOpen) {
+        if (!vanillaCanOpen || state == null) {
+            return false;
+        }
+        if (!AdvancedColoniesConfig.CITIZEN_COMMON.fixDoorAndGateToggleSlam.get()) {
+            return vanillaCanOpen;
+        }
+        if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN)) {
+            return !state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN);
+        }
+        return true;
+    }
 }

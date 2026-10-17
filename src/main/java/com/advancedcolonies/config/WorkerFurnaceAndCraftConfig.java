@@ -16,6 +16,8 @@ public final class WorkerFurnaceAndCraftConfig {
     public final ModConfigSpec.BooleanValue prioritizeMaxStockRecipeIngredients;
     public final ModConfigSpec.BooleanValue allowEarlyEnchantedTools;
     public final ModConfigSpec.DoubleValue enchantLevelToHutScale;
+    public final ModConfigSpec.BooleanValue enableContinuousBatchCrafting;
+    public final ModConfigSpec.BooleanValue enableSmoothCrafterSpeedScaling;
 
     public WorkerFurnaceAndCraftConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Furnace Workers, Crafting & Tool Enchantment Settings").push("furnaceAndCrafting");
@@ -51,6 +53,14 @@ public final class WorkerFurnaceAndCraftConfig {
         this.enchantLevelToHutScale = builder
                 .comment("Maximum enchantment level multiplier allowed per building level when allowEarlyEnchantedTools is enabled.")
                 .defineInRange("enchantLevelToHutScale", 0.5D, 0.2D, 2.0D);
+
+        this.enableContinuousBatchCrafting = builder
+                .comment("Allows crafters to immediately craft the next item in a multi-item batch when ingredients are still in their inventory, skipping redundant 4-second state transitions and rack scans.")
+                .define("enableContinuousBatchCrafting", true);
+
+        this.enableSmoothCrafterSpeedScaling = builder
+                .comment("Replaces coarse integer-division crafting time truncation with smooth floating-point skill scaling across all citizen levels.")
+                .define("enableSmoothCrafterSpeedScaling", true);
 
         builder.pop();
     }

@@ -41,6 +41,8 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.DoubleValue resurrectionSuccessChance;
     public final ModConfigSpec.BooleanValue enableCompassMindReader;
     public final ModConfigSpec.BooleanValue disablePermissionLevitation;
+    public final ModConfigSpec.BooleanValue fixDoorAndGateToggleSlam;
+    public final ModConfigSpec.BooleanValue returnGearOnUndertakerResurrect;
 
     public CitizenCommonConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Shared Citizen AI, Eating, Health, Leisure & QoL Settings").push("citizenCommon");
@@ -144,6 +146,14 @@ public final class CitizenCommonConfig {
         this.disablePermissionLevitation = builder
                 .comment("Prevents MineColonies from applying the Levitation effect to players during permission checks.")
                 .define("disablePermissionLevitation", true);
+
+        this.fixDoorAndGateToggleSlam = builder
+                .comment("Prevents citizens from slamming already-open doors and fence gates shut when walking through them.")
+                .define("fixDoorAndGateToggleSlam", true);
+
+        this.returnGearOnUndertakerResurrect = builder
+                .comment("When the Undertaker resurrects a fallen citizen, returns the citizen's grave items directly to their inventory instead of dumping them into the Graveyard rack.")
+                .define("returnGearOnUndertakerResurrect", true);
 
         builder.pop();
     }

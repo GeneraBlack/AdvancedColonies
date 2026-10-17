@@ -215,4 +215,35 @@ public final class FurnaceAndCraftingHelper {
         final int scaledEnchantCost = (int) Math.floor(maxEnchantBonus * scale);
         return (equipmentLevel + scaledEnchantCost) <= maximumLevel;
     }
+
+    /**
+     * Checks whether continuous batch crafting is enabled so that crafters stay in {@code CRAFT}
+     * state between consecutive items of a multi-item batch when ingredients are already in inventory.
+     *
+     * @return {@code true} if continuous batch crafting is enabled
+     */
+    public static boolean isContinuousBatchCraftingEnabled() {
+        return AdvancedColoniesConfig.FURNACE_AND_CRAFT.enableContinuousBatchCrafting.get();
+    }
+
+    /**
+     * Computes smooth required crafting progress across all skill levels, fixing vanilla's
+     * integer-division operator precedence truncation ({@code 10 / (jobModifier + 1) * 3})
+     * and clamping to at least {@code 1} hit so progress never drops to {@code 0}.
+     *
+     * @param skillLevel         the worker's relevant craft-speed skill level
+     * @param progressMultiplier vanilla {@code PROGRESS_MULTIPLIER} (10)
+     * @param hittingTime        vanilla {@code HITTING_TIME} (3)
+     * @param maxLevel           vanilla {@code MAX_LEVEL} (50)
+     * @return the required progress count (at least 1)
+     */
+    public static int computeSmoothRequiredCraftingProgress(
+            final int skillLevel,
+            final int progressMultiplier,
+            final int hittingTime,
+            final int maxLevel) {
+        final double effectiveDivisor = Math.min((skillLevel / 2.0D) + 1.0D, (double) maxLevel);
+        final int required = (int) Math.round((double) (progressMultiplier * hittingTime) / Math.max(1.0D, effectiveDivisor));
+        return Math.max(1, required);
+    }
 }

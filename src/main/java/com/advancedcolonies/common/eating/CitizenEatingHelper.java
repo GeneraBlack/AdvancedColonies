@@ -119,4 +119,26 @@ public final class CitizenEatingHelper {
             citizen.stopRiding();
         }
     }
+
+    /**
+     * Fixes the copy-paste bug in {@code CitizenData#needsBetterFood()} where {@code slotBadFood}
+     * and {@code slotGoodFood} used the exact same {@code FoodUtils.canEat(...)} predicate,
+     * causing {@code slotBadFood != -1 && slotGoodFood == -1} to always evaluate to {@code false}.
+     *
+     * @param citizenData the citizen data to evaluate
+     * @return {@code true} if the citizen only carries low-tier/disallowed edible food and no valid tier food
+     */
+    public static boolean evaluateNeedsBetterFood(@NotNull final ICitizenData citizenData) {
+        if (citizenData.getHomeBuilding() == null || citizenData.getInventory() == null) {
+            return false;
+        }
+        final int slotBadFood = com.minecolonies.api.util.InventoryUtils.findFirstSlotInItemHandlerNotEmptyWith(
+                citizenData.getInventory(),
+                stack -> FoodUtils.EDIBLE.test(stack)
+                        && !FoodUtils.canEat(stack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding()));
+        final int slotGoodFood = com.minecolonies.api.util.InventoryUtils.findFirstSlotInItemHandlerNotEmptyWith(
+                citizenData.getInventory(),
+                stack -> FoodUtils.canEat(stack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding()));
+        return slotBadFood != -1 && slotGoodFood == -1;
+    }
 }

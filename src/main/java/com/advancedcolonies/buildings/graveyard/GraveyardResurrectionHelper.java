@@ -112,12 +112,13 @@ public final class GraveyardResurrectionHelper {
             new VanillaParticleMessage(pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, ParticleTypes.HEART)
                     .sendToTargetPoint((net.minecraft.server.level.ServerLevel) level, null, pos.getX(), pos.getY(), pos.getZ(), 32);
 
-            // Drop any remaining items in the grave before removing the block
-            InventoryUtils.dropItemHandler(graveTile.getInventory(), level, pos.getX(), pos.getY(), pos.getZ());
-
             final ICitizenData resurrected = colony.getCitizenManager()
                     .resurrectCivilianData(graveData.getCitizenDataNBT(), true, level, pos);
             if (resurrected != null) {
+                if (AdvancedColoniesConfig.CITIZEN_COMMON.returnGearOnUndertakerResurrect.get()
+                        && resurrected.getInventory() != null) {
+                    InventoryUtils.transferAllItemHandler(graveTile.getInventory(), resurrected.getInventory());
+                }
                 MessageUtils.format(MESSAGE_INFO_CITIZEN_UNDERTAKER_RESURRECTED_SUCCESS, resurrected.getName())
                         .sendTo(colony)
                         .forManagers();
@@ -125,9 +126,51 @@ public final class GraveyardResurrectionHelper {
                 colony.getCitizenManager().updateCitizenMourn(resurrected, false);
             }
 
+            // Drop any remaining items in the grave before removing the block
+            InventoryUtils.dropItemHandler(graveTile.getInventory(), level, pos.getX(), pos.getY(), pos.getZ());
+
             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
         }
 
         return ItemInteractionResult.SUCCESS;
+    }
+
+    /**
+     * Transfers the fallen citizen's items (which the Undertaker emptied from the grave into their
+     * own inventory during {@code EMPTY_GRAVE}) directly back into the resurrected citizen's inventory
+     * during {@code EntityAIWorkUndertaker#tryResurrect()}, while keeping the Undertaker's own shovel
+     * and any Totem of Undying.
+     *
+     * @param undertaker  the Undertaker worker entity
+     * @param resurrected the newly resurrected citizen data
+     * @param shovelSlot  the slot index of the Undertaker's own shovel (to preserve)
+     */
+    public static void returnUndertakerGraveItemsToCitizen(
+            final com.minecolonies.api.entity.citizen.AbstractEntityCitizen undertaker,
+            final ICitizenData resurrected,
+            final int shovelSlot) {
+        if (undertaker == null || resurrected == null || resurrected.getInventory() == null) {
+            return;
+        }
+        if (!AdvancedColoniesConfig.CITIZEN_COMMON.returnGearOnUndertakerResurrect.get()) {
+            return;
+        }
+
+        final com.minecolonies.api.inventory.InventoryCitizen undertakerInv = undertaker.getInventoryCitizen();
+        final com.minecolonies.api.inventory.InventoryCitizen citizenInv = resurrected.getInventory();
+        if (undertakerInv == null) {
+            return;
+        }
+
+        for (int slot = 0; slot < undertakerInv.getSlots(); slot++) {
+            if (slot == shovelSlot) {
+                continue;
+            }
+            final ItemStack stackInSlot = undertakerInv.getStackInSlot(slot);
+            if (stackInSlot.isEmpty() || stackInSlot.is(net.minecraft.world.item.Items.TOTEM_OF_UNDYING)) {
+                continue;
+            }
+            InventoryUtils.transferItemStackIntoNextFreeSlotInItemHandler(undertakerInv, slot, citizenInv);
+        }
     }
 }
