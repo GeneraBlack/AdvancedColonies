@@ -66,6 +66,16 @@ public final class CitizenCommonConfig {
     public final ModConfigSpec.IntValue raiderFleeingGuardMaxThreat;
     public final ModConfigSpec.BooleanValue enableEnhancedGuiItemSearch;
 
+    // Context-Reactive Voicelines & Smart TownTalk/Audio Routing
+    public final ModConfigSpec.BooleanValue enableContextReactiveVoicelines;
+    public final ModConfigSpec.BooleanValue enableSmartSoundEventRouting;
+    public final ModConfigSpec.BooleanValue enableFloatingSpeechBubbles;
+    public final ModConfigSpec.IntValue voicelineMinCitizenCooldownSeconds;
+    public final ModConfigSpec.IntValue voicelineMinAreaCooldownTicks;
+    public final ModConfigSpec.IntValue voicelineMaxRangeBlocks;
+    public final ModConfigSpec.IntValue speechBubbleDurationSeconds;
+    public final ModConfigSpec.ConfigValue<List<? extends String>> customVoicelineTemplates;
+
     public CitizenCommonConfig(final ModConfigSpec.Builder builder) {
         builder.comment("Shared Citizen AI, Eating, Health, Leisure & QoL Settings").push("citizenCommon");
 
@@ -257,7 +267,40 @@ public final class CitizenCommonConfig {
                 .comment("Enhances item search boxes in MineColonies and Structurize windows with multi-keyword matching, @modid filtering, and optional JustEnoughCharacters (JEC) Pinyin support.")
                 .define("enableEnhancedGuiItemSearch", true);
 
+        this.enableContextReactiveVoicelines = builder
+                .comment("Master toggle for the context-reactive citizen voiceline generator and smart TownTalk/MineColonies sound routing.")
+                .define("enableContextReactiveVoicelines", true);
+
+        this.enableSmartSoundEventRouting = builder
+                .comment("Replaces MineColonies' random sound event selection with environment-aware routing (checks actual sky exposure for rain, active raids, real hunger/sickness, and nearby Guards/players).")
+                .define("enableSmartSoundEventRouting", true);
+
+        this.enableFloatingSpeechBubbles = builder
+                .comment("Renders floating 3D speech bubbles above citizens with context-reactive English voicelines when they speak.")
+                .define("enableFloatingSpeechBubbles", true);
+
+        this.voicelineMinCitizenCooldownSeconds = builder
+                .comment("Strict server limit on the minimum cooldown (in seconds) before the same citizen can trigger another ambient voiceline.")
+                .defineInRange("voicelineMinCitizenCooldownSeconds", 25, 5, 600);
+
+        this.voicelineMinAreaCooldownTicks = builder
+                .comment("Strict server limit on the minimum ticks between ambient voicelines within a 16-block radius to prevent crowd spam.")
+                .defineInRange("voicelineMinAreaCooldownTicks", 35, 0, 1200);
+
+        this.voicelineMaxRangeBlocks = builder
+                .comment("Server limit on the maximum distance (in blocks) within which players receive and see citizen voicelines.")
+                .defineInRange("voicelineMaxRangeBlocks", 24, 8, 64);
+
+        this.speechBubbleDurationSeconds = builder
+                .comment("Duration (in seconds) that floating 3D speech bubbles remain visible above a speaking citizen.")
+                .defineInRange("speechBubbleDurationSeconds", 6, 2, 20);
+
+        this.customVoicelineTemplates = builder
+                .comment("Optional custom voiceline templates in 'CONTEXT:Template text' format. Placeholders: {citizen}, {job}, {building}, {player}, {guard}, {weather}, {time}. Contexts: RAID_COMBAT, GUARD_RETREAT, SICK_OR_INJURED, MOURNING, SLEEPING_OR_BEDTIME, HUNGRY, DINING_SATISFIED, RAIN_AND_STORM, MISSING_TOOLS_OR_MATERIALS, HOME_COMFORT_GOOD, HOME_COMFORT_BAD, GUARD_REASSURANCE, WORKER_THANKS_GUARD, PLAYER_GREETING, ACTIVE_JOB_WORK, LEISURE_AND_HAPPY, UNHAPPY_MOOD.")
+                .defineListAllowEmpty("customVoicelineTemplates", List.of(), () -> "PLAYER_GREETING:Hello {player}! Working hard at the {building} today.", obj -> obj instanceof String);
+
         builder.pop();
     }
 }
+
 

@@ -1,6 +1,7 @@
 package com.advancedcolonies.network;
 
 import com.advancedcolonies.client.debug.ClientDebugCache;
+import com.advancedcolonies.client.voice.ClientSpeechBubbleCache;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.jetbrains.annotations.NotNull;
@@ -26,5 +27,9 @@ public final class AdvancedColoniesNetwork {
                 CitizenDebugSyncPayload.TYPE,
                 CitizenDebugSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> ClientDebugCache.applyPayload(payload)));
+        registrar.playToClient(
+                CitizenVoicelinePayload.TYPE,
+                CitizenVoicelinePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> ClientSpeechBubbleCache.applyPayload(payload)));
     }
 }

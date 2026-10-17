@@ -40,6 +40,7 @@
     "common.navigation.PathJobMoveCloseToXNearYMixin",
     "common.navigation.PathJobMoveToLocationMixin",
     "common.navigation.PathingStuckHandlerMixin",
+    "common.voice.SoundUtilsMixin",
     "workers.builder.AbstractEntityAIStructureMixin",
     "workers.builder.EntityAIStructureBuilderMixin",
     "workers.common.AbstractEntityAIBasicMixin",

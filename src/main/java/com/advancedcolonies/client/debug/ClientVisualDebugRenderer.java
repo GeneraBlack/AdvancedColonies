@@ -1,6 +1,7 @@
 package com.advancedcolonies.client.debug;
 
 import com.advancedcolonies.AdvancedColonies;
+import com.advancedcolonies.client.voice.ClientSpeechBubbleCache;
 import com.advancedcolonies.common.debug.CitizenDebugSnapshot;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -13,6 +14,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -29,10 +31,11 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Renders the in-game visual debugger overlays on the client:
+ * Renders the in-game visual debugger overlays and floating 3D speech bubbles on the client:
  * <ul>
  *   <li>Multi-line floating HUD billboards above debugged citizens showing AI actions, vitals/stats,
  *       and pathfinding/stuck status.</li>
+ *   <li>Floating 3D speech bubbles above citizens when they speak context-reactive voicelines.</li>
  *   <li>3D world-space pathfinding node boxes, connecting route lines, climb/rail indicators, and
  *       destination block highlights.</li>
  * </ul>
@@ -46,10 +49,12 @@ public final class ClientVisualDebugRenderer {
     @SubscribeEvent
     public static void onClientDisconnect(@NotNull final ClientPlayerNetworkEvent.LoggingOut event) {
         ClientDebugCache.clear();
+        ClientSpeechBubbleCache.clear();
     }
 
     /**
-     * Renders the floating multi-line debug billboard above any tracked {@link EntityCitizen}.
+     * Renders the floating multi-line debug billboard and/or context-reactive speech bubble
+     * above any {@link EntityCitizen}.
      */
     @SubscribeEvent
     public static void onRenderLivingPost(@NotNull final RenderLivingEvent.Post<?, ?> event) {
@@ -57,12 +62,9 @@ public final class ClientVisualDebugRenderer {
             return;
         }
         final CitizenDebugSnapshot snapshot = ClientDebugCache.getByEntityId(citizen.getId());
-        if (snapshot == null) {
-            return;
-        }
+        final ClientSpeechBubbleCache.SpeechBubbleEntry bubble = ClientSpeechBubbleCache.getActiveBubble(citizen.getId());
 
-        final List<Component> lines = buildBillboardLines(snapshot);
-        if (lines.isEmpty()) {
+        if (snapshot == null && bubble == null) {
             return;
         }
 
@@ -72,28 +74,108 @@ public final class ClientVisualDebugRenderer {
         final MultiBufferSource bufferSource = event.getMultiBufferSource();
         final int packedLight = event.getPackedLight();
 
+        int debugLineCount = 0;
+        if (snapshot != null) {
+            final List<Component> lines = buildBillboardLines(snapshot);
+            debugLineCount = lines.size();
+            if (!lines.isEmpty()) {
+                poseStack.pushPose();
+                poseStack.translate(0.0D, citizen.getBbHeight() + 0.95D, 0.0D);
+                poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
+                poseStack.scale(0.022F, -0.022F, 0.022F);
+
+                final Matrix4f matrix4f = poseStack.last().pose();
+                final int lineHeight = 10;
+                final int totalHeight = lines.size() * lineHeight;
+                int currentY = -totalHeight;
+
+                for (final Component line : lines) {
+                    final float xOffset = (float) (-font.width(line) / 2);
+                    font.drawInBatch(
+                            line,
+                            xOffset,
+                            (float) currentY,
+                            0xFFFFFFFF,
+                            false,
+                            matrix4f,
+                            bufferSource,
+                            Font.DisplayMode.NORMAL,
+                            0x88000000,
+                            packedLight);
+                    currentY += lineHeight;
+                }
+
+                poseStack.popPose();
+            }
+        }
+
+        if (bubble != null) {
+            renderSpeechBubble(poseStack, bufferSource, mc, font, citizen, bubble, debugLineCount, packedLight);
+        }
+    }
+
+    private static void renderSpeechBubble(
+            @NotNull final PoseStack poseStack,
+            @NotNull final MultiBufferSource bufferSource,
+            @NotNull final Minecraft mc,
+            @NotNull final Font font,
+            @NotNull final EntityCitizen citizen,
+            @NotNull final ClientSpeechBubbleCache.SpeechBubbleEntry bubble,
+            final int debugLineCount,
+            final int packedLight) {
+        final List<FormattedCharSequence> wrappedText = font.split(
+                Component.literal("\"" + bubble.text() + "\""),
+                170);
+        if (wrappedText.isEmpty()) {
+            return;
+        }
+
+        final String headerStr = "Unemployed".equalsIgnoreCase(bubble.jobName())
+                ? String.format("[%s]", bubble.citizenName())
+                : String.format("[%s • %s]", bubble.citizenName(), bubble.jobName());
+        final Component headerComponent = Component.literal(headerStr);
+
+        final double baseOffset = debugLineCount > 0
+                ? (0.95D + debugLineCount * 0.24D + 0.25D)
+                : 0.85D;
+
         poseStack.pushPose();
-        poseStack.translate(0.0D, citizen.getBbHeight() + 0.95D, 0.0D);
+        poseStack.translate(0.0D, citizen.getBbHeight() + baseOffset, 0.0D);
         poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
-        poseStack.scale(0.022F, -0.022F, 0.022F);
+        poseStack.scale(0.023F, -0.023F, 0.023F);
 
         final Matrix4f matrix4f = poseStack.last().pose();
         final int lineHeight = 10;
-        final int totalHeight = lines.size() * lineHeight;
-        int currentY = -totalHeight;
+        final int totalLines = 1 + wrappedText.size();
+        int currentY = -(totalLines * lineHeight);
 
-        for (final Component line : lines) {
-            final float xOffset = (float) (-font.width(line) / 2);
+        final int accentColor = 0xFF000000 | (bubble.accentColorRgb() & 0xFFFFFF);
+        final float headerX = (float) (-font.width(headerComponent) / 2);
+        font.drawInBatch(
+                headerComponent,
+                headerX,
+                (float) currentY,
+                accentColor,
+                false,
+                matrix4f,
+                bufferSource,
+                Font.DisplayMode.NORMAL,
+                0xA0101018,
+                packedLight);
+        currentY += lineHeight;
+
+        for (final FormattedCharSequence seq : wrappedText) {
+            final float xOffset = (float) (-font.width(seq) / 2);
             font.drawInBatch(
-                    line,
+                    seq,
                     xOffset,
                     (float) currentY,
-                    0xFFFFFFFF,
+                    0xFFF8F8F8,
                     false,
                     matrix4f,
                     bufferSource,
                     Font.DisplayMode.NORMAL,
-                    0x88000000,
+                    0xA0101018,
                     packedLight);
             currentY += lineHeight;
         }
