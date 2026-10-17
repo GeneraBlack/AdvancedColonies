@@ -2,6 +2,9 @@ package com.advancedcolonies.mixin.workers.builder;
 
 import com.advancedcolonies.workers.builder.BuilderLavaHazardTracker;
 import com.advancedcolonies.workers.builder.BuilderStandSafetyEvaluator;
+import com.advancedcolonies.workers.builder.StructureWorkModeHelper;
+import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
+import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingBuilder;
 import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIStructureWithWorkOrder;
@@ -20,8 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Thin Mixin hook on {@link EntityAIStructureBuilder} delegating worksite hazard retreat
- * and safe mining stand selection to {@link BuilderLavaHazardTracker} and {@link BuilderStandSafetyEvaluator}.
+ * Thin Mixin hook on {@link EntityAIStructureBuilder} delegating worksite hazard retreat,
+ * safe mining stand selection, configurable {@code WorkMode} positioning, and remote order acceptance
+ * to {@link BuilderLavaHazardTracker}, {@link BuilderStandSafetyEvaluator}, and {@link StructureWorkModeHelper}.
  */
 @Mixin(value = EntityAIStructureBuilder.class, remap = false)
 public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStructureWithWorkOrder<JobBuilder, BuildingBuilder> {
@@ -31,6 +35,9 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
 
     @Shadow
     PathResult gotoPath;
+
+    @Shadow
+    protected abstract boolean checkForWorkOrder();
 
     @Unique
     private final BuilderLavaHazardTracker advancedColonies$hazardTracker = new BuilderLavaHazardTracker();
@@ -53,11 +60,23 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
         advancedColonies$hazardTracker.reset();
     }
 
+    @Inject(method = "startWorkingAtOwnBuilding", at = @At("HEAD"), cancellable = true)
+    private void advancedColonies$onStartWorkingAtOwnBuilding(final CallbackInfoReturnable<IAIState> cir) {
+        if (StructureWorkModeHelper.canBuilderAcceptOrdersAnywhere() && checkForWorkOrder()) {
+            final IAIState state = super.startWorkingAtOwnBuilding();
+            cir.setReturnValue(state == AIWorkerState.IDLE ? AIWorkerState.LOAD_STRUCTURE : state);
+        }
+    }
+
     @Inject(method = "mineBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;)Z", at = @At("HEAD"), cancellable = true)
     private void advancedColonies$onBeforeMineBlock(
             @NotNull final BlockPos blockToMine,
             @Nullable final BlockPos safeStand,
             final CallbackInfoReturnable<Boolean> cir) {
+
+        if (StructureWorkModeHelper.shouldBypassMiningStandWalk(this, worker, blockToMine, safeStand)) {
+            return;
+        }
 
         final BlockPos standPos = safeStand == null ? worker.blockPosition() : safeStand;
         final BlockPos alternativeStand = BuilderStandSafetyEvaluator.findAlternativeMiningStand(
@@ -89,6 +108,16 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
             final CallbackInfoReturnable<Boolean> cir) {
 
         if (currentBlock == null) {
+            return;
+        }
+
+        final Boolean workModeResult = StructureWorkModeHelper.evaluateWalkToConstructionSite(
+                this, worker, building, currentBlock);
+        if (workModeResult != null) {
+            if (workModeResult) {
+                prevBlockPosition = currentBlock;
+            }
+            cir.setReturnValue(workModeResult);
             return;
         }
 
