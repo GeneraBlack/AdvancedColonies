@@ -164,12 +164,6 @@ cd AdvancedColonies
 ```
 The compiled mod JAR will be located in `build/libs/advancedcolonies-1.21.1-0.1.0.jar`.
 
-### Regenerating Emotional Voice Assets (Optional)
-To customize or regenerate the 376 citizen `.ogg` voice files using **Google Gemini 3.8 Live**:
-```powershell
-python tools/generate_gemini_voices.py --api-key YOUR_GEMINI_API_KEY --force
-```
-
 ---
 
 ## 📄 License
