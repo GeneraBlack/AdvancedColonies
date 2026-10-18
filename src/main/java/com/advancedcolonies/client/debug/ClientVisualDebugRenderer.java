@@ -10,6 +10,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -43,6 +44,16 @@ import java.util.List;
 @EventBusSubscriber(modid = AdvancedColonies.MOD_ID, value = Dist.CLIENT)
 public final class ClientVisualDebugRenderer {
 
+    /** Full-bright lightmap coordinate so HUD billboards and speech bubbles remain crisp indoors and at night. */
+    private static final int FULL_BRIGHT_LIGHT = LightTexture.FULL_BRIGHT;
+
+    /** Line height in font pixels with extra breathing room to prevent descender overlap. */
+    private static final int LINE_HEIGHT = 11;
+
+    /** Horizontal and vertical padding (in font pixels) around unified billboard panels. */
+    private static final int PANEL_PAD_X = 6;
+    private static final int PANEL_PAD_Y = 4;
+
     private ClientVisualDebugRenderer() {
     }
 
@@ -69,49 +80,97 @@ public final class ClientVisualDebugRenderer {
         }
 
         final Minecraft mc = Minecraft.getInstance();
+        if (mc.getEntityRenderDispatcher().distanceToSqr(citizen) > 4096.0D) {
+            return;
+        }
+
         final Font font = mc.font;
         final PoseStack poseStack = event.getPoseStack();
         final MultiBufferSource bufferSource = event.getMultiBufferSource();
-        final int packedLight = event.getPackedLight();
+
+        // Start cleanly above both the vanilla nametag (bbHeight + 0.50) and MineColonies' status icon (bbHeight + 0.80..1.05)
+        final double baseAnchorY = citizen.getBbHeight() + 1.15D;
 
         int debugLineCount = 0;
         if (snapshot != null) {
             final List<Component> lines = buildBillboardLines(snapshot);
             debugLineCount = lines.size();
             if (!lines.isEmpty()) {
-                poseStack.pushPose();
-                poseStack.translate(0.0D, citizen.getBbHeight() + 0.95D, 0.0D);
-                poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
-                poseStack.scale(0.022F, -0.022F, 0.022F);
-
-                final Matrix4f matrix4f = poseStack.last().pose();
-                final int lineHeight = 10;
-                final int totalHeight = lines.size() * lineHeight;
-                int currentY = -totalHeight;
-
-                for (final Component line : lines) {
-                    final float xOffset = (float) (-font.width(line) / 2);
-                    font.drawInBatch(
-                            line,
-                            xOffset,
-                            (float) currentY,
-                            0xFFFFFFFF,
-                            false,
-                            matrix4f,
-                            bufferSource,
-                            Font.DisplayMode.NORMAL,
-                            0x88000000,
-                            packedLight);
-                    currentY += lineHeight;
-                }
-
-                poseStack.popPose();
+                renderDebugBillboard(poseStack, bufferSource, mc, font, baseAnchorY, lines);
             }
         }
 
         if (bubble != null) {
-            renderSpeechBubble(poseStack, bufferSource, mc, font, citizen, bubble, debugLineCount, packedLight);
+            final double bubbleAnchorY = debugLineCount > 0
+                    ? baseAnchorY + (debugLineCount * LINE_HEIGHT + PANEL_PAD_Y * 2 + 6) * 0.026D
+                    : baseAnchorY;
+            renderSpeechBubble(poseStack, bufferSource, mc, font, bubbleAnchorY, bubble);
         }
+    }
+
+    private static void renderDebugBillboard(
+            @NotNull final PoseStack poseStack,
+            @NotNull final MultiBufferSource bufferSource,
+            @NotNull final Minecraft mc,
+            @NotNull final Font font,
+            final double anchorY,
+            @NotNull final List<Component> lines) {
+
+        int maxLineWidth = 0;
+        for (final Component line : lines) {
+            final int w = font.width(line);
+            if (w > maxLineWidth) {
+                maxLineWidth = w;
+            }
+        }
+
+        final int totalTextHeight = lines.size() * LINE_HEIGHT - 2;
+        final float halfWidth = maxLineWidth / 2.0F;
+        final float left = -halfWidth - PANEL_PAD_X;
+        final float right = halfWidth + PANEL_PAD_X;
+        final float top = -totalTextHeight - PANEL_PAD_Y;
+        final float bottom = PANEL_PAD_Y;
+
+        poseStack.pushPose();
+        poseStack.translate(0.0D, anchorY, 0.0D);
+        poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
+        // Offset slightly toward the camera in billboard space so it never Z-fights with citizen nametag/icon planes
+        poseStack.translate(0.0F, 0.0F, 0.04F);
+        poseStack.scale(0.026F, -0.026F, 0.026F);
+
+        // 1. Draw a single unified dark background panel behind the text (eliminates per-line seam Z-fighting)
+        drawUnifiedPanelBackground(
+                poseStack,
+                bufferSource,
+                left,
+                top,
+                right,
+                bottom,
+                0xD80E121A,
+                0xFF3A4A68);
+
+        // 2. Push text well forward in Z (0.20F in font space) and render with POLYGON_OFFSET + dropShadow + FULL_BRIGHT
+        poseStack.translate(0.0F, 0.0F, 0.20F);
+        final Matrix4f textMatrix = poseStack.last().pose();
+
+        int currentY = -totalTextHeight;
+        for (final Component line : lines) {
+            final float xOffset = -font.width(line) / 2.0F;
+            font.drawInBatch(
+                    line,
+                    xOffset,
+                    (float) currentY,
+                    0xFFFFFFFF,
+                    true,
+                    textMatrix,
+                    bufferSource,
+                    Font.DisplayMode.POLYGON_OFFSET,
+                    0,
+                    FULL_BRIGHT_LIGHT);
+            currentY += LINE_HEIGHT;
+        }
+
+        poseStack.popPose();
     }
 
     private static void renderSpeechBubble(
@@ -119,13 +178,12 @@ public final class ClientVisualDebugRenderer {
             @NotNull final MultiBufferSource bufferSource,
             @NotNull final Minecraft mc,
             @NotNull final Font font,
-            @NotNull final EntityCitizen citizen,
-            @NotNull final ClientSpeechBubbleCache.SpeechBubbleEntry bubble,
-            final int debugLineCount,
-            final int packedLight) {
+            final double anchorY,
+            @NotNull final ClientSpeechBubbleCache.SpeechBubbleEntry bubble) {
+
         final List<FormattedCharSequence> wrappedText = font.split(
                 Component.literal("\"" + bubble.text() + "\""),
-                170);
+                175);
         if (wrappedText.isEmpty()) {
             return;
         }
@@ -135,52 +193,120 @@ public final class ClientVisualDebugRenderer {
                 : String.format("[%s • %s]", bubble.citizenName(), bubble.jobName());
         final Component headerComponent = Component.literal(headerStr);
 
-        final double baseOffset = debugLineCount > 0
-                ? (0.95D + debugLineCount * 0.24D + 0.25D)
-                : 0.85D;
+        int maxLineWidth = font.width(headerComponent);
+        for (final FormattedCharSequence seq : wrappedText) {
+            final int w = font.width(seq);
+            if (w > maxLineWidth) {
+                maxLineWidth = w;
+            }
+        }
+
+        final int totalLines = 1 + wrappedText.size();
+        final int totalTextHeight = totalLines * LINE_HEIGHT - 2;
+        final float halfWidth = maxLineWidth / 2.0F;
+        final float left = -halfWidth - PANEL_PAD_X;
+        final float right = halfWidth + PANEL_PAD_X;
+        final float top = -totalTextHeight - PANEL_PAD_Y;
+        final float bottom = PANEL_PAD_Y;
+        final int accentColor = 0xFF000000 | (bubble.accentColorRgb() & 0xFFFFFF);
 
         poseStack.pushPose();
-        poseStack.translate(0.0D, citizen.getBbHeight() + baseOffset, 0.0D);
+        poseStack.translate(0.0D, anchorY, 0.0D);
         poseStack.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
-        poseStack.scale(0.023F, -0.023F, 0.023F);
+        // Slightly further toward camera than debug billboard so stacked panels never Z-fight
+        poseStack.translate(0.0F, 0.0F, 0.06F);
+        poseStack.scale(0.026F, -0.026F, 0.026F);
 
-        final Matrix4f matrix4f = poseStack.last().pose();
-        final int lineHeight = 10;
-        final int totalLines = 1 + wrappedText.size();
-        int currentY = -(totalLines * lineHeight);
+        // 1. Draw unified dark speech bubble panel with accent-colored top border
+        drawUnifiedPanelBackground(
+                poseStack,
+                bufferSource,
+                left,
+                top,
+                right,
+                bottom,
+                0xDC10121C,
+                accentColor);
 
-        final int accentColor = 0xFF000000 | (bubble.accentColorRgb() & 0xFFFFFF);
-        final float headerX = (float) (-font.width(headerComponent) / 2);
+        // 2. Push text well forward in Z (0.20F in font space) and render with POLYGON_OFFSET + dropShadow + FULL_BRIGHT
+        poseStack.translate(0.0F, 0.0F, 0.20F);
+        final Matrix4f textMatrix = poseStack.last().pose();
+
+        int currentY = -totalTextHeight;
+        final float headerX = -font.width(headerComponent) / 2.0F;
         font.drawInBatch(
                 headerComponent,
                 headerX,
                 (float) currentY,
                 accentColor,
-                false,
-                matrix4f,
+                true,
+                textMatrix,
                 bufferSource,
-                Font.DisplayMode.NORMAL,
-                0xA0101018,
-                packedLight);
-        currentY += lineHeight;
+                Font.DisplayMode.POLYGON_OFFSET,
+                0,
+                FULL_BRIGHT_LIGHT);
+        currentY += LINE_HEIGHT;
 
         for (final FormattedCharSequence seq : wrappedText) {
-            final float xOffset = (float) (-font.width(seq) / 2);
+            final float xOffset = -font.width(seq) / 2.0F;
             font.drawInBatch(
                     seq,
                     xOffset,
                     (float) currentY,
-                    0xFFF8F8F8,
-                    false,
-                    matrix4f,
+                    0xFFFFFFFF,
+                    true,
+                    textMatrix,
                     bufferSource,
-                    Font.DisplayMode.NORMAL,
-                    0xA0101018,
-                    packedLight);
-            currentY += lineHeight;
+                    Font.DisplayMode.POLYGON_OFFSET,
+                    0,
+                    FULL_BRIGHT_LIGHT);
+            currentY += LINE_HEIGHT;
         }
 
         poseStack.popPose();
+    }
+
+    /**
+     * Draws a single unified background card and non-overlapping border frame using {@link RenderType#textBackground()},
+     * completely avoiding multi-line overlapping background Z-fighting.
+     */
+    private static void drawUnifiedPanelBackground(
+            @NotNull final PoseStack poseStack,
+            @NotNull final MultiBufferSource bufferSource,
+            final float left,
+            final float top,
+            final float right,
+            final float bottom,
+            final int bgColorArgb,
+            final int accentBorderArgb) {
+
+        final Matrix4f matrix = poseStack.last().pose();
+        final VertexConsumer bgConsumer = bufferSource.getBuffer(RenderType.textBackground());
+        final int subtleFrameColor = 0xCC1E2636;
+
+        // Main panel body (disjoint interior rectangle)
+        addQuad(bgConsumer, matrix, left, top, right, bottom, 0.0F, bgColorArgb);
+
+        // Non-overlapping outer frame (1.5px top accent bar + 1px left/right/bottom border)
+        addQuad(bgConsumer, matrix, left - 1.0F, top - 1.5F, right + 1.0F, top, 0.0F, accentBorderArgb);
+        addQuad(bgConsumer, matrix, left - 1.0F, bottom, right + 1.0F, bottom + 1.0F, 0.0F, subtleFrameColor);
+        addQuad(bgConsumer, matrix, left - 1.0F, top, left, bottom, 0.0F, subtleFrameColor);
+        addQuad(bgConsumer, matrix, right, top, right + 1.0F, bottom, 0.0F, subtleFrameColor);
+    }
+
+    private static void addQuad(
+            @NotNull final VertexConsumer consumer,
+            @NotNull final Matrix4f matrix,
+            final float x1,
+            final float y1,
+            final float x2,
+            final float y2,
+            final float z,
+            final int argb) {
+        consumer.addVertex(matrix, x1, y2, z).setColor(argb).setLight(FULL_BRIGHT_LIGHT);
+        consumer.addVertex(matrix, x2, y2, z).setColor(argb).setLight(FULL_BRIGHT_LIGHT);
+        consumer.addVertex(matrix, x2, y1, z).setColor(argb).setLight(FULL_BRIGHT_LIGHT);
+        consumer.addVertex(matrix, x1, y1, z).setColor(argb).setLight(FULL_BRIGHT_LIGHT);
     }
 
     /**

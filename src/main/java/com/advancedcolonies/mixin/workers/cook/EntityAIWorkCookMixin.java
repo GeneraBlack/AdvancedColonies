@@ -7,6 +7,7 @@ import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import com.minecolonies.core.colony.jobs.JobCook;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIUsesFurnace;
 import com.minecolonies.core.entity.ai.workers.service.EntityAIWorkCook;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Queue;
@@ -60,9 +62,34 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIUsesFurnace<
                 this.citizenToServe);
     }
 
+    @Redirect(
+            method = "serveFoodToCitizen",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/minecolonies/core/entity/ai/workers/service/EntityAIWorkCook;walkToWorkPos(Lnet/minecraft/core/BlockPos;)Z"
+            ),
+            remap = false
+    )
+    private boolean advancedColonies$walkToCustomerOrServeInRange(
+            final EntityAIWorkCook self,
+            final BlockPos targetPos) {
+        if (CookServiceOptimizer.isWithinImmediateServeRange(this.worker, targetPos)) {
+            if (this.citizenToServe.size() <= 1) {
+                this.worker.getNavigation().stop();
+            }
+            CookServiceOptimizer.onCustomerServed(this.worker, this.citizenToServe.peek());
+            return true;
+        }
+        final boolean arrived = this.walkToWorkPos(targetPos);
+        if (arrived) {
+            CookServiceOptimizer.onCustomerServed(this.worker, this.citizenToServe.peek());
+        }
+        return arrived;
+    }
+
     @Inject(method = "getActionsDoneUntilDumping", at = @At("HEAD"), cancellable = true)
     private void advancedColonies$onGetActionsDoneUntilDumping(final CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(CookServiceOptimizer.getSmartActionsUntilDumping(
-                this.world, this.worker, this.building, this.citizenToServe));
+                this.worker, this.citizenToServe));
     }
 }

@@ -67,7 +67,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     private void advancedColonies$onBeforeHarvestIfAble(
             final BlockPos position,
             final CallbackInfoReturnable<Boolean> cir) {
-        if (building == null || world == null || worker == null) {
+        if (position == null || building == null || world == null || worker == null) {
             return;
         }
         final BuildingExtensionsModule module = building.getFirstModuleOccurance(BuildingExtensionsModule.class);
@@ -86,7 +86,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     private void advancedColonies$onAfterHarvestIfAble(
             final BlockPos position,
             final CallbackInfoReturnable<Boolean> cir) {
-        if (!Boolean.TRUE.equals(cir.getReturnValue()) || !didWork || building == null) {
+        if (position == null || !Boolean.TRUE.equals(cir.getReturnValue()) || !didWork || building == null) {
             return;
         }
         final BuildingExtensionsModule module = building.getFirstModuleOccurance(BuildingExtensionsModule.class);
