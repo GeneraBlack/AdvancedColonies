@@ -34,11 +34,16 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         super(entity, world);
     }
 
-    @Inject(method = "handlePathPointOnLadder", at = @At("RETURN"))
+    @Shadow(remap = false)
+    private PathPointExtended currentNode() {
+        return null;
+    }
+
+    @Inject(method = "handleLadders", at = @At("RETURN"), remap = false)
     private void advancedColonies$onHandlePathPointOnLadderReturn(
-            final PathPointExtended pEx,
             final CallbackInfoReturnable<Boolean> cir) {
 
+        final PathPointExtended pEx = this.currentNode();
         if (this.ourEntity == null || pEx == null || this.wantedPosition == null || this.wantedPosition.empty()) {
             return;
         }

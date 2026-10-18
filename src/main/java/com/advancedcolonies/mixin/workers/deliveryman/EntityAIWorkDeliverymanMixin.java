@@ -35,7 +35,8 @@ public abstract class EntityAIWorkDeliverymanMixin
                     value = "INVOKE",
                     target = "Lcom/minecolonies/core/entity/ai/workers/service/EntityAIWorkDeliveryman;getSecondarySkillLevel()I"
             ),
-            remap = false
+            remap = false,
+            require = 0
     )
     private int advancedcolonies$expandParallelDeliveryLimit(final EntityAIWorkDeliveryman self) {
         return DeliverymanLogisticsOptimizer.getEffectiveParallelDeliverySkillLevel(this.getSecondarySkillLevel());

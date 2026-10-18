@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -100,17 +101,24 @@ public final class DeliverymanLogisticsOptimizer {
         }
 
         // If the primary request is a DeliveryRequest, allow up to 12 total same-destination deliveries
-        if (firstReq instanceof StandardRequests.DeliveryRequest) {
-            int count = currentQueue.size();
+        if (firstReq instanceof StandardRequests.DeliveryRequest && job instanceof IJobDeliverymanAccess access) {
+            final LinkedList<IToken<?>> mutableQueue = access.advancedColonies$getMutableTaskQueue();
+            if (mutableQueue == null) {
+                return;
+            }
+            int count = mutableQueue.size();
             final List<IToken<?>> toRemove = new ArrayList<>();
             for (final IToken<?> candidateToken : queueModule.getMutableRequestList()) {
                 if (count >= 12) {
                     break;
                 }
+                if (mutableQueue.contains(candidateToken)) {
+                    continue;
+                }
                 final IRequest localRequest = job.getColony().getRequestManager().getRequestForToken(candidateToken);
                 if (localRequest instanceof StandardRequests.DeliveryRequest
-                        && job.hasSameDestinationDelivery((IRequest<? extends Delivery>) localRequest)) {
-                    job.addRequest(candidateToken, count);
+                        && hasSameDestinationInQueue(job, access, mutableQueue, (IRequest<? extends Delivery>) localRequest)) {
+                    mutableQueue.add(Math.min(count, mutableQueue.size()), candidateToken);
                     toRemove.add(candidateToken);
                     count++;
                 }
@@ -120,6 +128,26 @@ public final class DeliverymanLogisticsOptimizer {
                 queueModule.markDirty();
             }
         }
+    }
+
+    private static boolean hasSameDestinationInQueue(
+            final JobDeliveryman job,
+            final IJobDeliverymanAccess access,
+            final List<IToken<?>> queue,
+            final IRequest<? extends Delivery> candidateRequest) {
+        final Delivery candidateDelivery = candidateRequest.getRequest();
+        if (candidateDelivery == null) {
+            return false;
+        }
+        for (final IToken<?> existingToken : queue) {
+            final IRequest<?> existingReq = job.getColony().getRequestManager().getRequestForToken(existingToken);
+            if (existingReq != null && existingReq.getRequest() instanceof Delivery existingDelivery) {
+                if (access.advancedColonies$haveTasksSameSourceAndDest(existingDelivery, candidateDelivery)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -151,9 +179,10 @@ public final class DeliverymanLogisticsOptimizer {
         }
 
         // If the personal queue is empty, look for the closest pending PickupRequest in the Warehouse queue
-        if (nextQueued == null) {
+        if (nextQueued == null && job instanceof IJobDeliverymanAccess access) {
+            final LinkedList<IToken<?>> mutableQueue = access.advancedColonies$getMutableTaskQueue();
             final IBuilding warehouse = job.findWareHouse();
-            if (warehouse != null) {
+            if (warehouse != null && mutableQueue != null) {
                 final WarehouseRequestQueueModule queueModule = warehouse.getModule(BuildingModules.WAREHOUSE_REQUEST_QUEUE);
                 if (queueModule != null && !queueModule.getMutableRequestList().isEmpty()) {
                     final BlockPos workerPos = worker.blockPosition();
@@ -173,7 +202,7 @@ public final class DeliverymanLogisticsOptimizer {
                     }
 
                     if (bestPickupToken != null) {
-                        job.addRequest(bestPickupToken, 0);
+                        mutableQueue.addFirst(bestPickupToken);
                         queueModule.getMutableRequestList().remove(bestPickupToken);
                         queueModule.markDirty();
                         return AIWorkerState.PICKUP;
