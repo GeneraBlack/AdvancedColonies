@@ -8,7 +8,6 @@ import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.managers.interfaces.IRegisteredStructureManager;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
-import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
@@ -106,20 +105,20 @@ public abstract class EntityAIEatTaskMixin {
             method = "waitForFood",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/minecolonies/api/colony/managers/interfaces/IRegisteredStructureManager;getBestBuilding(Lcom/minecolonies/api/entity/citizen/AbstractEntityCitizen;Ljava/lang/Class;)Lnet/minecraft/core/BlockPos;"
+                    target = "Lcom/minecolonies/api/colony/managers/interfaces/IRegisteredStructureManager;getBestBuilding(Lnet/minecraft/core/BlockPos;Ljava/lang/Class;)Lnet/minecraft/core/BlockPos;"
             ),
             remap = false
     )
     private BlockPos advancedColonies$preserveSelectedRestaurantInWaitForFood(
             final IRegisteredStructureManager manager,
-            final AbstractEntityCitizen targetCitizen,
+            final BlockPos startPos,
             final Class<?> buildingClass) {
         if (AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedEatingAI.get()
                 && this.restaurantPos != null
                 && manager.getBuilding(this.restaurantPos) instanceof BuildingCook) {
             return this.restaurantPos;
         }
-        return manager.getBestBuilding(targetCitizen, BuildingCook.class);
+        return manager.getBestBuilding(startPos, BuildingCook.class);
     }
 
     @Inject(method = "getFoodYourself", at = @At("HEAD"))
