@@ -19,8 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Queue;
 
 /**
- * Thin Mixin hook on {@link EntityAIWorkCook} delegating customer queue deduplication,
- * nearest-table distance sorting, and smart inventory dump thresholds to {@link CookServiceOptimizer}.
+ * Thin Mixin hook on {@link EntityAIWorkCook} delegating out-of-order customer pool management,
+ * stuck-customer bypass, drive-by serving, and smart inventory dump thresholds to {@link CookServiceOptimizer}.
  */
 @Mixin(value = EntityAIWorkCook.class, remap = false)
 public abstract class EntityAIWorkCookMixin extends AbstractEntityAIUsesFurnace<JobCook, BuildingCook> {
@@ -37,15 +37,27 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIUsesFurnace<
         super(job);
     }
 
-    @Inject(method = "checkForImportantJobs", at = @At("RETURN"))
+    @Inject(method = "checkForImportantJobs", at = @At("RETURN"), cancellable = true)
     private void advancedColonies$onCheckForImportantJobsReturn(final CallbackInfoReturnable<IAIState> cir) {
-        CookServiceOptimizer.deduplicateAndSortCitizenQueue(this.worker, this.building, this.citizenToServe);
-        CookServiceOptimizer.sanitizePlayerQueue(this.playerToServe);
+        final IAIState nextState = CookServiceOptimizer.onCheckForImportantJobsReturn(
+                this.world,
+                this.worker,
+                this.building,
+                this.citizenToServe,
+                this.playerToServe,
+                cir.getReturnValue());
+        if (nextState != cir.getReturnValue()) {
+            cir.setReturnValue(nextState);
+        }
     }
 
     @Inject(method = "serveFoodToCitizen", at = @At("HEAD"))
     private void advancedColonies$onServeFoodToCitizenHead(final CallbackInfoReturnable<IAIState> cir) {
-        CookServiceOptimizer.deduplicateAndSortCitizenQueue(this.worker, this.building, this.citizenToServe);
+        CookServiceOptimizer.onServeFoodToCitizenHead(
+                this.world,
+                this.worker,
+                this.building,
+                this.citizenToServe);
     }
 
     @Inject(method = "getActionsDoneUntilDumping", at = @At("HEAD"), cancellable = true)

@@ -84,7 +84,7 @@ Every worker enhancement respects strict server-side caps to protect TPS and mul
   * Street-grouped batch deliveries & pickups (`deliveryBatchMaxSize`) and multi-warehouse courier assignment support.
 * **Smelter, Cook, Kitchen & Restaurant**:
   * Accelerated furnace smelting and fuel efficiency scaling with worker skill and building level (`furnaceMaxSpeedMultiplier`).
-  * Instant citizen dining (`instantEat`) and smarter restaurant stocking.
+  * **Out-of-Order Dining Hall Customer Pool**: Replaces the vanilla FIFO restaurant queue with a non-blocking customer pool featuring opportunistic drive-by serving (`<= 3.5` blocks), automatic stuck/unreachable customer bypass (no head-of-line blocking), instant citizen dining (`instantEat`), and smart inventory dump thresholds.
 * **Enchanter**:
   * Batch Ancient Tome / Book requests (`enchanterBookRequestBatchSize`), building-level mana caps (`enchanterMaxLevelPerBuildingLevel`), and autonomous daily XP drain from designated colony workers.
 * **Concrete Mixer**:

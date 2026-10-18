@@ -51,7 +51,7 @@ See exactly what your citizens are thinking and where they are walking—right i
 * **Farmer & Planter**: Fixed outward spiral field scanning, crop survival fixes, right-click harvest scaling, and **Multi-Season Crop Rotation** per Farm Field.
 * **Lumberjack**: Fixed downward stump detection for floating **Mangrove Propagules** and faster timber harvesting.
 * **Deliveryman & Warehouse**: Street-grouped batch deliveries/pickups and multi-warehouse courier assignment.
-* **Smelter, Cook & Kitchen**: Skill- and building-level-scaled furnace smelting speed and fuel efficiency, plus instant citizen dining.
+* **Smelter, Cook & Kitchen**: Skill- and building-level-scaled furnace smelting speed and fuel efficiency, **non-blocking Out-of-Order Dining Hall customer pool** (drive-by serving & automatic stuck-customer bypass so one unreachable citizen never blocks the restaurant), and instant citizen dining.
 * **Enchanter**: Batch Ancient Tome/Book requests, building-level mana caps, and autonomous daily XP collection.
 * **Concrete Mixer**: High-speed batch powder placement and cured concrete harvesting.
 * **Cowboy & Beekeeper**: Multi-milking/stewing per visit, no `Large Bottle` cooldown, Beekeeper hive-harvest priority, and automatic bee penning.
