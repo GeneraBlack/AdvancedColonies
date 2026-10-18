@@ -47,7 +47,7 @@ public abstract class AbstractEntityAIUsesFurnaceMixin<J extends AbstractJob<?, 
             method = "fillUpFurnace",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/Level;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;",
+                    target = "Lnet/minecraft/server/level/ServerLevel;getBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;",
                     shift = At.Shift.AFTER
             ),
             remap = false

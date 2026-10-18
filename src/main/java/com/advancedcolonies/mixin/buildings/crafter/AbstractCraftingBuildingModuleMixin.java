@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -30,7 +29,7 @@ public abstract class AbstractCraftingBuildingModuleMixin extends AbstractBuildi
 
     @Shadow(remap = false)
     @Final
-    protected Set<IToken<?>> disabledRecipes;
+    protected List<IToken<?>> disabledRecipes;
 
     @Inject(
             method = "getFirstRecipe(Ljava/util/function/Predicate;)Lcom/minecolonies/api/crafting/IRecipeStorage;",

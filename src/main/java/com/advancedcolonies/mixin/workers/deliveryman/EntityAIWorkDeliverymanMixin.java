@@ -33,13 +33,13 @@ public abstract class EntityAIWorkDeliverymanMixin
             method = "prepareDelivery",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/minecolonies/core/entity/ai/workers/service/EntityAIWorkDeliveryman;getSecondarySkillLevel()I"
+                    target = "Lcom/minecolonies/core/colony/jobs/JobDeliveryman;getMaxParallelDeliveries()I"
             ),
-            remap = false,
-            require = 0
+            remap = false
     )
-    private int advancedcolonies$expandParallelDeliveryLimit(final EntityAIWorkDeliveryman self) {
-        return DeliverymanLogisticsOptimizer.getEffectiveParallelDeliverySkillLevel(this.getSecondarySkillLevel());
+    private int advancedcolonies$expandParallelDeliveryLimit(final JobDeliveryman jobInstance) {
+        final int effectiveSkill = DeliverymanLogisticsOptimizer.getEffectiveParallelDeliverySkillLevel(this.getSecondarySkillLevel());
+        return Math.max(jobInstance.getMaxParallelDeliveries(), 1 + (effectiveSkill / 5));
     }
 
     @Inject(

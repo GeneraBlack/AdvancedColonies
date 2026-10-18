@@ -13,8 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -33,7 +33,7 @@ public final class CrafterRecipePriorityHelper {
      *
      * @param building        the crafter building
      * @param recipes         the ordered list of recipe tokens on the module
-     * @param disabledRecipes the set of disabled recipe tokens
+     * @param disabledRecipes the collection of disabled recipe tokens
      * @param stackPredicate  the desired output predicate
      * @return the best matching recipe storage, or {@code null} to fall back to vanilla
      */
@@ -41,7 +41,7 @@ public final class CrafterRecipePriorityHelper {
     public static IRecipeStorage selectMaxStockRecipe(
             @Nullable final IBuilding building,
             final List<IToken<?>> recipes,
-            final Set<IToken<?>> disabledRecipes,
+            final Collection<IToken<?>> disabledRecipes,
             final Predicate<ItemStack> stackPredicate) {
         if (building == null
                 || building.getColony() == null

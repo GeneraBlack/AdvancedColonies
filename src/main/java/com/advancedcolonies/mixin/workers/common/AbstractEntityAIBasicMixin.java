@@ -1,8 +1,8 @@
 package com.advancedcolonies.mixin.workers.common;
 
 import com.advancedcolonies.workers.common.WorkerHutLogisticsHelper;
+import com.minecolonies.api.tileentities.AbstractTileEntityColonyBuilding;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIBasic;
-import com.minecolonies.core.tileentities.TileEntityColonyBuilding;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,12 +22,12 @@ public abstract class AbstractEntityAIBasicMixin {
             method = "getNeededItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/minecolonies/core/tileentities/TileEntityColonyBuilding;getPositionOfChestWithItemStack(Ljava/util/function/Predicate;)Lnet/minecraft/core/BlockPos;"
+                    target = "Lcom/minecolonies/api/tileentities/AbstractTileEntityColonyBuilding;getPositionOfChestWithItemStack(Ljava/util/function/Predicate;)Lnet/minecraft/core/BlockPos;"
             ),
             remap = false
     )
     private BlockPos advancedcolonies$resolveDirectHutPickupPosition(
-            final TileEntityColonyBuilding tileEntity,
+            final AbstractTileEntityColonyBuilding tileEntity,
             final Predicate<ItemStack> itemPredicate) {
         return WorkerHutLogisticsHelper.resolvePickupPosition(tileEntity, itemPredicate);
     }
