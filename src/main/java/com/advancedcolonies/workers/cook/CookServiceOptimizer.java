@@ -1,7 +1,7 @@
 package com.advancedcolonies.workers.cook;
 
 import com.advancedcolonies.config.AdvancedColoniesConfig;
-import com.minecolonies.api.colony.buildings.IBuilding;
+import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -15,9 +15,11 @@ import com.minecolonies.core.colony.jobs.JobCook;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.MinecoloniesAdvancedPathNavigate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import static com.minecolonies.api.util.constant.CitizenConstants.AVERAGE_SATURATION;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.RESTAURANT_MENU;
@@ -41,14 +44,18 @@ import static com.minecolonies.core.colony.buildings.modules.BuildingModules.RES
  *   <li><b>Out-of-Order Pool & Opportunistic Drive-By Service:</b> Any waiting citizen who is already
  *       within immediate serving reach ({@code <= 4.0} blocks on the same floor) is served
  *       immediately so the cook feeds nearby guests on the fly without waiting on distant targets.</li>
+ *   <li><b>SittingEntity Floor-Offset Compensation:</b> Compensates for {@code SittingEntity#sitDown}
+ *       lowering a sitting citizen's Y coordinate by {@code (bbHeight / 2) + 0.25} into the floor block
+ *       underneath the chair, preventing ground-floor guests from failing {@code building.isInBuilding}
+ *       or making the cook pathfind into the floor below.</li>
  *   <li><b>Stuck / Unreachable Customer Bypass (No Head-of-Line Blocking):</b> Tracks consecutive
  *       walk attempts per target citizen. If a customer cannot be reached within {@link #MAX_WALK_ATTEMPTS_BEFORE_BYPASS}
  *       stalled cycles (e.g. stuck in a chair/corner or pathfinding fails), that citizen receives a temporary
  *       deprioritization cooldown and moves to the back of the pool so all other reachable citizens
  *       are served out-of-order first.</li>
  *   <li><b>Non-Blocking Inventory Service:</b> Ensures that if the cook already carries valid menu food for
- *       waiting guests, they are added to the pool and served without a single guest's missing luxury food
- *       starving the dining hall.</li>
+ *       waiting guests, they are added to the pool and served immediately without a single guest's missing
+ *       rack food blocking the dining hall.</li>
  *   <li><b>Smart Inventory Dumping:</b> Prevents the cook from dumping their inventory after every single
  *       action ({@code getActionsDoneUntilDumping() == 1} in vanilla) while actively serving customers,
  *       while still dumping cooked furnace output into racks when the customer queue is empty.</li>
@@ -92,8 +99,58 @@ public final class CookServiceOptimizer {
     }
 
     /**
+     * Resolves the effective block position of a customer in the dining hall, compensating for
+     * {@code SittingEntity#sitDown} lowering a seated citizen's Y coordinate by {@code (bbHeight / 2) + 0.25}
+     * (which otherwise places {@code customer.blockPosition()} 1–2 blocks below the chair inside the floor).
+     *
+     * @param customer    the customer entity.
+     * @param fallbackPos fallback position if {@code customer} is {@code null}.
+     * @return the effective floor/chair block position of the customer.
+     */
+    @Nullable
+    public static BlockPos getEffectiveCustomerPos(
+            @Nullable final AbstractEntityCitizen customer,
+            @Nullable final BlockPos fallbackPos) {
+        if (customer == null) {
+            return fallbackPos;
+        }
+        if (customer.isPassenger()) {
+            final int chairY = Mth.floor(customer.getY() + (customer.getBbHeight() * 0.5D) + 0.26D);
+            return new BlockPos(customer.getBlockX(), chairY, customer.getBlockZ());
+        }
+        return customer.blockPosition();
+    }
+
+    /**
+     * Checks whether a customer (including one seated in a {@code SittingEntity} chair on the lowest
+     * floor of a restaurant blueprint) is inside {@code building}.
+     *
+     * @param building    the restaurant building.
+     * @param customer    the customer entity (may be {@code null}).
+     * @param fallbackPos the raw block position passed by vanilla.
+     * @return {@code true} if the customer is inside the building.
+     */
+    public static boolean isCustomerInBuilding(
+            @NotNull final BuildingCook building,
+            @Nullable final AbstractEntityCitizen customer,
+            @Nullable final BlockPos fallbackPos) {
+        if (fallbackPos != null && building.isInBuilding(fallbackPos)) {
+            return true;
+        }
+        if (customer == null) {
+            return false;
+        }
+        final BlockPos effectivePos = getEffectiveCustomerPos(customer, fallbackPos);
+        if (effectivePos != null && building.isInBuilding(effectivePos)) {
+            return true;
+        }
+        final BlockPos rawPos = customer.blockPosition();
+        return building.isInBuilding(rawPos.above()) || building.isInBuilding(rawPos.above(2));
+    }
+
+    /**
      * Checks whether the cook is close enough to the customer's position to hand over food directly
-     * without requiring vanilla's strict 1-block arrival check to complete.
+     * without requiring vanilla's strict arrival check to complete.
      *
      * @param cook      the cook worker entity.
      * @param targetPos the target customer block position.
@@ -129,6 +186,52 @@ public final class CookServiceOptimizer {
     }
 
     /**
+     * Unified edibility check matching {@code FoodUtils.canEat(stack, homeBuilding, workBuilding)}
+     * (used by {@code EntityAIEatTask#hasFood()} and {@code FoodUtils.getBestFoodForCitizen})
+     * so the Cook and the Citizen never disagree by 1 hut level on whether a food item is edible.
+     *
+     * @param stack   the candidate food stack.
+     * @param citizen the target citizen.
+     * @return {@code true} if the citizen is allowed to eat {@code stack}.
+     */
+    public static boolean canCitizenEatStack(
+            @NotNull final ItemStack stack,
+            @Nullable final AbstractEntityCitizen citizen) {
+        if (citizen == null || citizen.getCitizenData() == null) {
+            return true;
+        }
+        final ICitizenData data = citizen.getCitizenData();
+        return FoodUtils.canEat(stack, data.getHomeBuilding(), data.getWorkBuilding());
+    }
+
+    /**
+     * Checks whether the customer's inventory already contains a menu food item that the customer
+     * is actually allowed to eat according to their home and work building levels.
+     * <p>
+     * Fixes the bug in {@code EntityAIWorkCook#serveFoodToCitizen()} where vanilla checked
+     * {@code module.getMenu().contains(new ItemStorage(stack))} without checking {@code canEat},
+     * causing the cook to walk up to a hungry citizen holding a rejected low-tier menu item and
+     * abort without giving them valid food.
+     */
+    public static boolean hasValidMenuFoodInCustomerHandler(
+            @Nullable final IItemHandler citizenInventory,
+            @NotNull final Predicate<ItemStack> rawMenuPredicate,
+            @NotNull final BuildingCook building,
+            @Nullable final AbstractEntityCitizen customer) {
+        if (citizenInventory == null) {
+            return false;
+        }
+        if (!AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedRestaurantCookAI.get() || customer == null) {
+            return InventoryUtils.hasItemInItemHandler(citizenInventory, rawMenuPredicate);
+        }
+        final RestaurantMenuModule module = building.getModule(RESTAURANT_MENU);
+        if (module == null) {
+            return InventoryUtils.hasItemInItemHandler(citizenInventory, rawMenuPredicate);
+        }
+        return hasValidMenuFoodInInventory(customer, module);
+    }
+
+    /**
      * Called at the return of {@code EntityAIWorkCook#checkForImportantJobs()}.
      * Populates the customer pool with all citizens who can be fed from the cook's current inventory,
      * deduplicates/sorts the pool out-of-order, and transitions to serving when ready customers are waiting.
@@ -156,22 +259,18 @@ public final class CookServiceOptimizer {
             return originalState;
         }
 
-        // If vanilla wants to grab a food stack from the restaurant racks right here at the hut block
-        // and the cook still has free inventory space, let the cook pick up the food stack first so they
-        // can serve a full batch of waiting citizens in a single trip.
-        if (originalState == AIWorkerState.GATHERING_REQUIRED_MATERIALS && cook.getInventoryCitizen().hasSpace()) {
-            return originalState;
-        }
-
         // Collect all hungry citizens in the dining hall for whom the cook ALREADY carries valid menu food.
         collectReadyCustomersIntoPool(world, cook, building, citizenToServe);
 
         // Deduplicate, filter out citizens without matching food in the cook's inventory, and sort out-of-order.
         refreshCitizenPoolOutOfOrder(world, cook, building, citizenToServe, false);
 
+        // If the cook already holds valid food for waiting customers in the pool, serve them immediately
+        // instead of letting a single citizen's rack-gathering request block service!
         if (!citizenToServe.isEmpty()
                 && (originalState == AIWorkerState.START_WORKING
-                || originalState == AIWorkerState.GATHERING_REQUIRED_MATERIALS)) {
+                || originalState == AIWorkerState.GATHERING_REQUIRED_MATERIALS
+                || originalState == AIWorkerState.COOK_SERVE_FOOD_TO_CITIZEN)) {
             return AIWorkerState.COOK_SERVE_FOOD_TO_CITIZEN;
         }
 
@@ -270,7 +369,8 @@ public final class CookServiceOptimizer {
             if (candidate == null || !candidate.isAlive()) {
                 continue;
             }
-            if (!building.isInBuilding(candidate.blockPosition()) || !isCitizenStillHungry(candidate)) {
+            if (!isCustomerInBuilding(building, candidate, candidate.blockPosition())
+                    || !isCitizenStillHungry(candidate)) {
                 tracker.clearCustomer(candidate.getId());
                 continue;
             }
@@ -304,7 +404,7 @@ public final class CookServiceOptimizer {
         if (isServeTick) {
             final AbstractEntityCitizen currentHead = pool.get(0);
             final int headId = currentHead.getId();
-            final BlockPos headPos = currentHead.blockPosition();
+            final BlockPos headPos = getEffectiveCustomerPos(currentHead, currentHead.blockPosition());
 
             if (!isWithinImmediateServeRange(cook, headPos)) {
                 final double distSqr = cookPos.distSqr(headPos);
@@ -347,8 +447,9 @@ public final class CookServiceOptimizer {
                 c -> computeOutOfOrderPriorityScore(cook, cookPos, c, lockedTargetId, tracker, now)));
 
         final AbstractEntityCitizen newHead = pool.get(0);
+        final BlockPos newHeadPos = getEffectiveCustomerPos(newHead, newHead.blockPosition());
         if (tracker.activeTargetId != newHead.getId()) {
-            tracker.setActiveTarget(newHead.getId(), cookPos.distSqr(newHead.blockPosition()));
+            tracker.setActiveTarget(newHead.getId(), cookPos.distSqr(newHeadPos));
         }
 
         citizenToServe.clear();
@@ -364,7 +465,7 @@ public final class CookServiceOptimizer {
             final long now) {
 
         final int customerId = customer.getId();
-        final BlockPos customerPos = customer.blockPosition();
+        final BlockPos customerPos = getEffectiveCustomerPos(customer, customer.blockPosition());
         final double floorWeightedDistSqr = computeFloorWeightedDistanceSqr(cookPos, customerPos);
 
         // Temporarily stuck/unreachable customers sink to the back of the pool
@@ -485,13 +586,7 @@ public final class CookServiceOptimizer {
         if (!module.getMenu().contains(new ItemStorage(stack))) {
             return false;
         }
-        if (citizen.getCitizenData() != null) {
-            final IBuilding home = citizen.getCitizenData().getHomeBuilding();
-            if (home != null) {
-                return home.canEat(stack);
-            }
-        }
-        return true;
+        return canCitizenEatStack(stack, citizen);
     }
 
     /**

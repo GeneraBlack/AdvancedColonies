@@ -2,6 +2,8 @@ package com.advancedcolonies.workers.common;
 
 import com.advancedcolonies.config.AdvancedColoniesConfig;
 import com.minecolonies.api.tileentities.AbstractTileEntityColonyBuilding;
+import com.minecolonies.api.util.Tuple;
+import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -48,5 +50,27 @@ public final class WorkerHutLogisticsHelper {
         }
 
         return chestPos;
+    }
+
+    /**
+     * Checks whether a worker's building has no remaining items matching {@code needsCurrently}
+     * in any of its containers after a partial transfer (e.g. when the cook requests 64 food items
+     * and the building racks only had 15, all 15 are transferred on the first attempt).
+     *
+     * @param building       the worker's building
+     * @param needsCurrently the requested item predicate and count tuple
+     * @return {@code true} if the building has no more matching items to transfer
+     */
+    public static boolean isBuildingDepletedOfItem(
+            @Nullable final AbstractBuilding building,
+            @Nullable final Tuple<Predicate<ItemStack>, Integer> needsCurrently) {
+        if (building == null || needsCurrently == null || needsCurrently.getA() == null) {
+            return false;
+        }
+        final AbstractTileEntityColonyBuilding tileEntity = building.getTileEntity();
+        if (tileEntity == null) {
+            return false;
+        }
+        return tileEntity.getPositionOfChestWithItemStack(needsCurrently.getA()) == null;
     }
 }

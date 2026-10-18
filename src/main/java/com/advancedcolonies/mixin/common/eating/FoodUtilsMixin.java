@@ -17,7 +17,8 @@ import java.util.Set;
 
 /**
  * Thin Mixin hook on {@link FoodUtils} delegating global food blacklist checks,
- * nutrition multipliers, and Cook inventory sufficiency checks to {@link CitizenEatingHelper}.
+ * configurable food-level requirement bypass, nutrition multipliers, and Cook inventory
+ * sufficiency checks to {@link CitizenEatingHelper}.
  */
 @Mixin(value = FoodUtils.class, remap = false)
 public abstract class FoodUtilsMixin {
@@ -30,6 +31,31 @@ public abstract class FoodUtilsMixin {
             final CallbackInfoReturnable<Boolean> cir) {
         if (CitizenEatingHelper.isGloballyBlacklisted(stack)) {
             cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "canEatLevel", at = @At("HEAD"), cancellable = true)
+    private static void advancedColonies$onCanEatLevel(
+            final ItemStack stack,
+            final int buildingLevel,
+            final CallbackInfoReturnable<Boolean> cir) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()) {
+            cir.setReturnValue(CitizenEatingHelper.canEatIgnoringBuildingLevel(stack));
+        }
+    }
+
+    @Inject(method = "getBestFoodForCitizen", at = @At("RETURN"), cancellable = true)
+    private static void advancedColonies$onGetBestFoodForCitizenReturn(
+            final InventoryCitizen inventoryCitizen,
+            final ICitizenData citizenData,
+            final Set<ItemStorage> menu,
+            final CallbackInfoReturnable<Integer> cir) {
+        if (cir.getReturnValueI() == -1) {
+            final int fallbackSlot = CitizenEatingHelper.resolveBestFoodSlotFallback(
+                    -1, inventoryCitizen, citizenData, menu);
+            if (fallbackSlot != -1) {
+                cir.setReturnValue(fallbackSlot);
+            }
         }
     }
 

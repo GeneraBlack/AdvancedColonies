@@ -149,13 +149,12 @@ public final class NavigationStuckAndRescueHelper {
     }
 
     /**
-     * Corrects the vanilla MineColonies {@code case WEST:} ladder Y-offset typo ({@code +0.8} Y)
-     * and ensures smooth upward climbing on scaffolding blocks.
+     * Ensures smooth upward climbing on scaffolding blocks during ladder/climbable navigation.
      *
      * @param entity       the climbing citizen entity
      * @param ladderFacing the ladder facing direction of the current path node
-     * @param wantedY      the current wanted Y coordinate computed by {@code handlePathPointOnLadder}
-     * @return the corrected wanted Y coordinate
+     * @param wantedY      the current wanted Y coordinate computed by {@code handleLadders}
+     * @return the wanted Y coordinate
      */
     public static double correctClimbWantedYAndImpulse(
             @NotNull final Mob entity,
@@ -164,12 +163,6 @@ public final class NavigationStuckAndRescueHelper {
 
         if (!AdvancedColoniesConfig.PATHFINDING.fixLadderAndScaffoldingClimb.get()) {
             return wantedY;
-        }
-
-        double correctedY = wantedY;
-        // Fix vanilla MineColonies case WEST: vec3.add(0.8, 0.8, 0) typo where Y received +0.8
-        if (ladderFacing == Direction.WEST) {
-            correctedY -= 0.8D;
         }
 
         // Ensure steady upward velocity when climbing scaffolding or non-LadderBlock climbables
@@ -183,7 +176,7 @@ public final class NavigationStuckAndRescueHelper {
             }
         }
 
-        return correctedY;
+        return wantedY;
     }
 
     /**

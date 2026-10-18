@@ -162,12 +162,11 @@ public final class NavigationCostEvaluator {
             return 50.0D;
         }
 
-        // 3. Refund Vanilla's Erroneous Jump Penalty on Ladder Entry/Exit and DO Stairs/Slabs
-        if (!isDiving && dY != 0) {
+        // 3. Refund Vanilla's Erroneous Jump Penalty on 1-Block Ladder Entry/Exit and DO Stairs/Slabs
+        if (!isDiving && Math.abs(dY) == 1) {
             final boolean isLadderTransition = (ladder != parent.isLadder())
                     && (ladder || parent.isLadder() || isClimbableBlock(state) || isClimbableBlock(below));
-            final boolean isCustomStairOrSlabStep = Math.abs(dY) == 1
-                    && !below.is(BlockTags.STAIRS)
+            final boolean isCustomStairOrSlabStep = !below.is(BlockTags.STAIRS)
                     && isStairOrSlab(state, below);
             if (isLadderTransition || isCustomStairOrSlabStep) {
                 if (dY > 0) {
@@ -200,25 +199,19 @@ public final class NavigationCostEvaluator {
             cost += cfg.farmlandJumpPenalty.get();
         }
 
-        // Steeper drop penalty for drops >= 2 blocks so citizens prefer stairs/ladders over ledge drops
-        if (dY < -1 && !ladder) {
-            final int dropAbs = Math.abs(dY);
-            cost += 0.25D * (dropAbs * dropAbs * dropAbs * dropAbs);
-        }
-
         // 5. Climbable (Ladders & Vines) and Rail Preference
+        // Never apply surface cost discounts to multi-block free-falls (dY < -1 && !ladder).
         if (cfg.preferClimbablesAndRails.get()) {
             if (ladder || isClimbableBlock(state) || isClimbableBlock(below)) {
                 cost *= (dY != 0) ? 0.35D : 0.65D;
-            }
-            if (onRails || state.is(BlockTags.RAILS) || below.is(BlockTags.RAILS)
-                    || footBlock instanceof BaseRailBlock || belowBlock instanceof BaseRailBlock) {
+            } else if (dY >= -1 && (onRails || state.is(BlockTags.RAILS) || below.is(BlockTags.RAILS)
+                    || footBlock instanceof BaseRailBlock || belowBlock instanceof BaseRailBlock)) {
                 cost *= 0.45D;
             }
         }
 
-        // 6. Built Roads, Stairs, Slabs & Colony Building Footprints
-        if (cfg.preferRoadsAndStructures.get()) {
+        // 6. Built Roads, Stairs, Slabs & Colony Building Footprints (only for normal steps dY >= -1)
+        if (dY >= -1 && cfg.preferRoadsAndStructures.get()) {
             final boolean isRoadOrStair = onPath || isPlayerOrColonyRoadBlock(state, below);
             if (isRoadOrStair) {
                 cost *= cfg.roadCostMultiplier.get();
@@ -229,6 +222,22 @@ public final class NavigationCostEvaluator {
 
             if (actualWorld != null && isInsideColonyBuildingFast(actualWorld.dimension(), x, y, z)) {
                 cost *= cfg.structurePathCostBonus.get();
+            }
+        }
+
+        // 7. Undiscounted Multi-Block Drop & Fall-Damage Avoidance Penalty
+        // Applied AFTER all surface multipliers so landing on a road/building below never discounts a drop!
+        // In Minecraft, falls > 3.0 blocks deal fall damage (and a 3-block drop from a stair/slab or onto a
+        // dirt path/slab exceeds 3.0 blocks and deals fall damage).
+        if (dY < -1 && !ladder) {
+            final int dropAbs = Math.abs(dY);
+            if (dropAbs == 2) {
+                cost += 8.0D;
+            } else if (dropAbs == 3) {
+                cost += 80.0D;
+            } else {
+                final int excess = dropAbs - 2;
+                cost += 1000.0D * excess * excess;
             }
         }
 

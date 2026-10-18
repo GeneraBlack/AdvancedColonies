@@ -9,8 +9,10 @@ import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
+import com.minecolonies.core.items.ItemCrop;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,13 +21,95 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Shared helper for citizen food evaluation, global food blacklists, nutrition multipliers,
- * and clean chair dismounting after meals.
+ * Shared helper for citizen food evaluation, global food blacklists, configurable food-level bypass,
+ * nutrition multipliers, and clean chair dismounting after meals.
  */
 public final class CitizenEatingHelper {
 
     private CitizenEatingHelper() {
         // Utility class
+    }
+
+    /**
+     * Checks whether building/hut food level restrictions should be ignored.
+     */
+    public static boolean shouldIgnoreFoodLevelRequirements() {
+        return AdvancedColoniesConfig.CITIZEN_COMMON.ignoreFoodLevelRequirements.get();
+    }
+
+    /**
+     * Evaluates whether {@code stack} is edible when {@code ignoreFoodLevelRequirements} is enabled,
+     * bypassing MineColonies' {@code nutrition >= buildingLevel + 1} restriction for Level 3–5 citizens
+     * while still rejecting raw crops and globally blacklisted items.
+     *
+     * @param stack the candidate food stack.
+     * @return {@code true} if the item is a valid edible food item.
+     */
+    public static boolean canEatIgnoringBuildingLevel(@NotNull final ItemStack stack) {
+        if (stack.isEmpty() || stack.getItem() instanceof ItemCrop || isGloballyBlacklisted(stack)) {
+            return false;
+        }
+        return stack.getItem().getFoodProperties(stack, null) != null;
+    }
+
+    /**
+     * Fallback for {@link FoodUtils#getBestFoodForCitizen(InventoryCitizen, ICitizenData, Set)} when
+     * vanilla returns {@code -1} solely because a Level 3–5 citizen's {@code diversityReq} or {@code qualityReq}
+     * rejected a valid edible food item already in their inventory (e.g. Level 4 or vanilla food just served
+     * by the Cook).
+     *
+     * @param originalSlot the slot returned by vanilla {@code getBestFoodForCitizen}.
+     * @param inventory    the inventory being searched.
+     * @param citizenData  the citizen data.
+     * @param menu         optional restaurant menu filter.
+     * @return a valid food slot index, or {@code -1} if no edible food is present.
+     */
+    public static int resolveBestFoodSlotFallback(
+            final int originalSlot,
+            @Nullable final InventoryCitizen inventory,
+            @Nullable final ICitizenData citizenData,
+            @Nullable final Set<ItemStorage> menu) {
+        if (originalSlot != -1 || inventory == null || citizenData == null) {
+            return originalSlot;
+        }
+        if (!shouldIgnoreFoodLevelRequirements()
+                && !AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedEatingAI.get()) {
+            return -1;
+        }
+
+        final ICitizenFoodHandler foodHandler = citizenData.getCitizenFoodHandler();
+        int bestSlot = -1;
+        int bestScore = Integer.MAX_VALUE;
+        int bestNutrition = -1;
+
+        final int slots = inventory.getSlots();
+        for (int i = 0; i < slots; i++) {
+            final ItemStack stack = inventory.getStackInSlot(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            if (menu != null && !menu.contains(new ItemStorage(stack))) {
+                continue;
+            }
+            if (!FoodUtils.canEat(stack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding())) {
+                continue;
+            }
+
+            final boolean isMinecolFood = stack.getItem() instanceof IMinecoloniesFoodItem;
+            final int localScore = foodHandler != null
+                    ? foodHandler.checkLastEaten(stack.getItem()) * (isMinecolFood ? 1 : 2)
+                    : 0;
+            final FoodProperties props = stack.getItem().getFoodProperties(stack, null);
+            final int nutrition = props != null ? props.nutrition() : 0;
+
+            if (localScore < bestScore || (localScore == bestScore && nutrition > bestNutrition)) {
+                bestScore = localScore;
+                bestNutrition = nutrition;
+                bestSlot = i;
+            }
+        }
+
+        return bestSlot;
     }
 
     /**
@@ -83,27 +167,36 @@ public final class CitizenEatingHelper {
             return false;
         }
 
-        final int invSlot = FoodUtils.getBestFoodForCitizen(inventory, citizenData, menu);
-        if (invSlot < 0) {
-            return false;
-        }
-
-        final ItemStack stack = inventory.getStackInSlot(invSlot);
-        if (stack.isEmpty()) {
-            return false;
-        }
-
-        final boolean isMinecolFood = stack.getItem() instanceof IMinecoloniesFoodItem;
         final ICitizenFoodHandler foodHandler = citizenData.getCitizenFoodHandler();
         final ICitizenFoodHandler.CitizenFoodStats foodStats = foodHandler.getFoodHappinessStats();
-        final int homeLevel = citizenData.getHomeBuilding() == null ? 0 : citizenData.getHomeBuilding().getBuildingLevelEquivalent();
+        final int homeLevel = citizenData.getHomeBuilding() == null
+                ? 0
+                : citizenData.getHomeBuilding().getBuildingLevelEquivalent();
         final int diversityReq = FoodUtils.getMinFoodDiversityRequirement(homeLevel);
         final int qualityReq = FoodUtils.getMinFoodQualityRequirement(homeLevel);
-        final int localScore = foodHandler.checkLastEaten(stack.getItem()) * (isMinecolFood ? 1 : 2);
 
-        return (localScore < 0 && isMinecolFood)
-                || (localScore < 0 && foodStats.quality() > qualityReq * 2)
-                || (isMinecolFood && foodStats.diversity() > diversityReq * 2);
+        final int slots = inventory.getSlots();
+        for (int i = 0; i < slots; i++) {
+            final ItemStack stack = inventory.getStackInSlot(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            if (menu != null && !menu.contains(new ItemStorage(stack))) {
+                continue;
+            }
+            if (!FoodUtils.canEat(stack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding())) {
+                continue;
+            }
+
+            final boolean isMinecolFood = stack.getItem() instanceof IMinecoloniesFoodItem;
+            final int localScore = foodHandler.checkLastEaten(stack.getItem()) * (isMinecolFood ? 1 : 2);
+            if ((localScore < 0 && isMinecolFood)
+                    || (localScore < 0 && foodStats.quality() > qualityReq * 2)
+                    || (isMinecolFood && foodStats.diversity() > diversityReq * 2)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

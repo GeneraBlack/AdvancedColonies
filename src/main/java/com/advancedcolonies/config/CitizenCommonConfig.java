@@ -12,6 +12,7 @@ public final class CitizenCommonConfig {
     // Eating & Restaurant AI
     public final ModConfigSpec.BooleanValue enableEnhancedEatingAI;
     public final ModConfigSpec.BooleanValue enableEnhancedRestaurantCookAI;
+    public final ModConfigSpec.BooleanValue ignoreFoodLevelRequirements;
     public final ModConfigSpec.BooleanValue preorderRestaurantTable;
     public final ModConfigSpec.BooleanValue serveHungryPlayersInRestaurant;
     public final ModConfigSpec.IntValue restaurantWaitTimeoutSeconds;
@@ -86,6 +87,10 @@ public final class CitizenCommonConfig {
         this.enableEnhancedRestaurantCookAI = builder
                 .comment("Enables the optimized restaurant waiter/cook AI (64-stack gathering, nearest-table serving, mid-round restocking).")
                 .define("enableEnhancedRestaurantCookAI", true);
+
+        this.ignoreFoodLevelRequirements = builder
+                .comment("If true, citizens ignore building/residence food level, tier, quality, and diversity restrictions (e.g. Level 5 citizens will accept and eat Level 4 or lower-tier/vanilla food).")
+                .define("ignoreFoodLevelRequirements", true);
 
         this.preorderRestaurantTable = builder
                 .comment("Citizens reserve a seat at the least crowded nearby restaurant before walking there.")
