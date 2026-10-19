@@ -51,7 +51,8 @@ public abstract class CitizenDataMixin {
             cancellable = true
     )
     private void advancedcolonies$fixNeedsBetterFood(final CallbackInfoReturnable<Boolean> cir) {
-        if (AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedEatingAI.get()) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()
+                || AdvancedColoniesConfig.CITIZEN_COMMON.enableEnhancedEatingAI.get()) {
             final CitizenData self = (CitizenData) (Object) this;
             cir.setReturnValue(CitizenEatingHelper.evaluateNeedsBetterFood(self));
         }

@@ -44,6 +44,44 @@ public abstract class FoodUtilsMixin {
         }
     }
 
+    @Inject(method = "getBuildingLevelForFood", at = @At("HEAD"), cancellable = true)
+    private static void advancedColonies$onGetBuildingLevelForFood(
+            final ItemStack stack,
+            final CallbackInfoReturnable<Integer> cir) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()
+                && CitizenEatingHelper.canEatIgnoringBuildingLevel(stack)) {
+            cir.setReturnValue(CitizenEatingHelper.MAX_BUILDING_FOOD_LEVEL);
+        }
+    }
+
+    @Inject(method = "getFoodTier", at = @At("HEAD"), cancellable = true)
+    private static void advancedColonies$onGetFoodTier(
+            final ItemStack food,
+            final CallbackInfoReturnable<Integer> cir) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()
+                && CitizenEatingHelper.canEatIgnoringBuildingLevel(food)) {
+            cir.setReturnValue(CitizenEatingHelper.MAX_FOOD_TIER);
+        }
+    }
+
+    @Inject(method = "getMinFoodQualityRequirement", at = @At("HEAD"), cancellable = true)
+    private static void advancedColonies$onGetMinFoodQualityRequirement(
+            final int buildingLevel,
+            final CallbackInfoReturnable<Integer> cir) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()) {
+            cir.setReturnValue(0);
+        }
+    }
+
+    @Inject(method = "getMinFoodDiversityRequirement", at = @At("HEAD"), cancellable = true)
+    private static void advancedColonies$onGetMinFoodDiversityRequirement(
+            final int buildingLevel,
+            final CallbackInfoReturnable<Integer> cir) {
+        if (CitizenEatingHelper.shouldIgnoreFoodLevelRequirements()) {
+            cir.setReturnValue(0);
+        }
+    }
+
     @Inject(method = "getBestFoodForCitizen", at = @At("RETURN"), cancellable = true)
     private static void advancedColonies$onGetBestFoodForCitizenReturn(
             final InventoryCitizen inventoryCitizen,

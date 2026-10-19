@@ -26,6 +26,16 @@ import java.util.Set;
  */
 public final class CitizenEatingHelper {
 
+    /** Maximum building level in MineColonies (Level 5). */
+    public static final int MAX_BUILDING_FOOD_LEVEL = 5;
+
+    /** Maximum MineColonies food tier (Tier 3). */
+    public static final int MAX_FOOD_TIER = 3;
+
+    /** Maximum food quality and diversity stats (10/10) when food level restrictions are ignored. */
+    public static final ICitizenFoodHandler.CitizenFoodStats MAX_FOOD_HAPPINESS_STATS =
+            new ICitizenFoodHandler.CitizenFoodStats(10, 10);
+
     private CitizenEatingHelper() {
         // Utility class
     }
@@ -54,9 +64,8 @@ public final class CitizenEatingHelper {
 
     /**
      * Fallback for {@link FoodUtils#getBestFoodForCitizen(InventoryCitizen, ICitizenData, Set)} when
-     * vanilla returns {@code -1} solely because a Level 3–5 citizen's {@code diversityReq} or {@code qualityReq}
-     * rejected a valid edible food item already in their inventory (e.g. Level 4 or vanilla food just served
-     * by the Cook).
+     * vanilla returns {@code -1} because a Level 3–5 citizen's {@code diversityReq}, {@code qualityReq},
+     * or active {@code restaurant} menu filter rejected a valid edible food item already in their inventory.
      *
      * @param originalSlot the slot returned by vanilla {@code getBestFoodForCitizen}.
      * @param inventory    the inventory being searched.
@@ -77,6 +86,21 @@ public final class CitizenEatingHelper {
             return -1;
         }
 
+        int bestSlot = findBestEdibleSlot(inventory, citizenData, menu);
+        if (bestSlot == -1 && menu != null && inventory == citizenData.getInventory()) {
+            // When checking the citizen's OWN inventory (e.g. inside EntityAIEatTask#hasFood() while
+            // this.restaurant != null), do not reject valid edible food the citizen is already carrying
+            // just because it is not on the current restaurant's menu (which would otherwise trigger
+            // BETTER_FOOD complaints and abort eating into an infinite loop).
+            bestSlot = findBestEdibleSlot(inventory, citizenData, null);
+        }
+        return bestSlot;
+    }
+
+    private static int findBestEdibleSlot(
+            @NotNull final InventoryCitizen inventory,
+            @NotNull final ICitizenData citizenData,
+            @Nullable final Set<ItemStorage> menu) {
         final ICitizenFoodHandler foodHandler = citizenData.getCitizenFoodHandler();
         int bestSlot = -1;
         int bestScore = Integer.MAX_VALUE;
@@ -222,6 +246,9 @@ public final class CitizenEatingHelper {
      * @return {@code true} if the citizen only carries low-tier/disallowed edible food and no valid tier food
      */
     public static boolean evaluateNeedsBetterFood(@NotNull final ICitizenData citizenData) {
+        if (shouldIgnoreFoodLevelRequirements()) {
+            return false;
+        }
         if (citizenData.getHomeBuilding() == null || citizenData.getInventory() == null) {
             return false;
         }
