@@ -30,7 +30,7 @@ public final class BuilderLavaHazardTracker {
     private static final int LAVA_RETRY_DELAY = 15;
 
     /** Extended retry delay (in ticks) when the same hazard repeatedly blocks the same target. */
-    private static final int LAVA_PERSISTENT_RETRY_DELAY = 100;
+    private static final int LAVA_PERSISTENT_RETRY_DELAY = 60;
 
     /** Number of consecutive detections before treating a hazard as persistent. */
     private static final int LAVA_PERSISTENT_THRESHOLD = 3;
@@ -42,7 +42,7 @@ public final class BuilderLavaHazardTracker {
     private static final int LAVA_ACTIVATION_DISTANCE = 12;
 
     /** Exclusion radius around a recently detected hazard for the same work target. */
-    private static final int LAVA_BLOCKED_STAND_DISTANCE = 6;
+    private static final int LAVA_BLOCKED_STAND_DISTANCE = 5;
 
     /** Search radius for finding an alternative lava-free stand position. */
     private static final int SAFE_STAND_SEARCH_RADIUS = 6;
@@ -182,13 +182,14 @@ public final class BuilderLavaHazardTracker {
     }
 
     /**
-     * Validates a preferred working stand against lava hazards, rerouting to a nearby safe stand if necessary.
+     * Validates a preferred working stand against lava hazards, rerouting to a nearby safe stand ONLY
+     * if {@code preferredStand} is actually threatened by nearby lava.
      *
      * @param world          the world level.
      * @param worker         the builder entity.
      * @param currentBlock   the target block being worked on.
      * @param preferredStand the candidate stand position.
-     * @return a verified safe stand position, or {@code null} if no safe stand is available.
+     * @return a verified safe stand position, or {@code null} if threatened by lava and no safe stand is available.
      */
     @Nullable
     public BlockPos resolveSafeWorkingStand(
@@ -205,17 +206,32 @@ public final class BuilderLavaHazardTracker {
             return preferredStand;
         }
 
+        final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        final BlockPos lavaNearPreferred = BuilderStandSafetyEvaluator.findLavaNearStand(world, cursor, preferredStand);
+
+        // CRITICAL: If there is NO lava near preferredStand and it is not inside a recent lava hazard zone,
+        // keep preferredStand as-is so normal/distant/roof/wall workFrom positions are never rejected!
+        if (lavaNearPreferred == null && !isBlockedByRecentHazard(currentBlock, preferredStand)) {
+            return preferredStand;
+        }
+
         final BlockPos safeStand = findSafeWorkingStand(world, worker, currentBlock, preferredStand);
         if (safeStand != null) {
             return safeStand;
         }
 
-        final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-        final BlockPos lavaPos = BuilderStandSafetyEvaluator.findLavaNearStand(world, cursor, preferredStand);
-        if (lavaPos != null) {
+        if (lavaNearPreferred != null) {
             lastLavaThreatTick = world.getGameTime();
-            recordHazardDetection(world, lavaPos, currentBlock);
+            recordHazardDetection(world, lavaNearPreferred, currentBlock);
         }
+
+        // If we have already backed off repeatedly for this exact target block and the builder's
+        // current foot position is lava-free, allow working from the current position so the build never stalls.
+        if (repeatedHazardDetections >= LAVA_PERSISTENT_THRESHOLD
+                && BuilderStandSafetyEvaluator.findLavaNearStand(world, cursor, worker.blockPosition()) == null) {
+            return worker.blockPosition();
+        }
+
         return null;
     }
 
@@ -290,19 +306,18 @@ public final class BuilderLavaHazardTracker {
             return currentStand.immutable();
         }
 
-        if (isUsableSafeStand(world, currentBlock, preferredStand, cursor)) {
-            return preferredStand;
-        }
-
+        final int[] yOffsets = {0, -1, 1, -2, 2};
         for (int radius = 1; radius <= SAFE_STAND_SEARCH_RADIUS; radius++) {
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
-                        continue;
-                    }
-                    final BlockPos candidate = preferredStand.offset(dx, 0, dz);
-                    if (isUsableSafeStand(world, currentBlock, candidate, cursor)) {
-                        return candidate;
+            for (final int dy : yOffsets) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                            continue;
+                        }
+                        final BlockPos candidate = preferredStand.offset(dx, dy, dz);
+                        if (isUsableSafeStand(world, currentBlock, candidate, cursor)) {
+                            return candidate;
+                        }
                     }
                 }
             }
@@ -316,7 +331,7 @@ public final class BuilderLavaHazardTracker {
             @NotNull final BlockPos stand,
             @NotNull final BlockPos.MutableBlockPos cursor) {
 
-        if (BlockPosUtil.getDistance2D(stand, currentBlock) > 5) {
+        if (BlockPosUtil.getDistance2D(stand, currentBlock) > 8) {
             return false;
         }
         if (stand.getX() == currentBlock.getX() && stand.getZ() == currentBlock.getZ() && stand.getY() >= currentBlock.getY()) {

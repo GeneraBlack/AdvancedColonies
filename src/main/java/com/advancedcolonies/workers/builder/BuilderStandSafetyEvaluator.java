@@ -84,17 +84,39 @@ public final class BuilderStandSafetyEvaluator {
         final BlockPos center = new BlockPos(blockToMine.getX(), currentStand.getY(), blockToMine.getZ());
         final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 
-        // Check cardinal neighbors at the same Y level first, then 1 block lower/higher
-        final int[] yOffsets = {0, -1, 1};
+        // Check cardinal neighbors first, then diagonal/ring neighbors up to radius 3 across vertical offsets
+        final int[] yOffsets = {0, -1, 1, -2, 2};
         for (final int dy : yOffsets) {
             final BlockPos baseCenter = center.offset(0, dy, 0);
             for (final Direction direction : Direction.Plane.HORIZONTAL) {
                 final BlockPos candidate = baseCenter.relative(direction);
-                if (canUseStandPosition(world, candidate)
+                if (!candidate.equals(currentStand)
+                        && canUseStandPosition(world, candidate)
                         && !isUnsafeMiningStand(world, blockToMine, candidate)
                         && (hazardTracker == null || !hazardTracker.isBlockedByRecentHazard(blockToMine, candidate))
                         && findLavaNearStand(world, cursor, candidate) == null) {
                     return candidate;
+                }
+            }
+        }
+
+        for (int radius = 1; radius <= 3; radius++) {
+            for (final int dy : yOffsets) {
+                final BlockPos baseCenter = center.offset(0, dy, 0);
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) {
+                            continue;
+                        }
+                        final BlockPos candidate = baseCenter.offset(dx, 0, dz);
+                        if (!candidate.equals(currentStand)
+                                && canUseStandPosition(world, candidate)
+                                && !isUnsafeMiningStand(world, blockToMine, candidate)
+                                && (hazardTracker == null || !hazardTracker.isBlockedByRecentHazard(blockToMine, candidate))
+                                && findLavaNearStand(world, cursor, candidate) == null) {
+                            return candidate;
+                        }
+                    }
                 }
             }
         }

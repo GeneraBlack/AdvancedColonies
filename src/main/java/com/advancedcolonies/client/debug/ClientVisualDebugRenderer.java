@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -22,8 +23,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
@@ -34,11 +37,12 @@ import java.util.List;
 /**
  * Renders the in-game visual debugger overlays and floating 3D speech bubbles on the client:
  * <ul>
- *   <li>Multi-line floating HUD billboards above debugged citizens showing AI actions, vitals/stats,
- *       and pathfinding/stuck status.</li>
+ *   <li>Multi-line floating HUD billboards above debugged citizens showing AI actions, Builder stages,
+ *       active requests/alerts, vitals/inventory stats, and accurate 3D pathfinding/stall status.</li>
  *   <li>Floating 3D speech bubbles above citizens when they speak context-reactive voicelines.</li>
- *   <li>3D world-space pathfinding node boxes, connecting route lines, climb/rail indicators, and
- *       destination block highlights.</li>
+ *   <li>3D world-space pathfinding node boxes, connecting route lines, climb/rail indicators,
+ *       destination block highlights, and Builder/Miner work target &amp; stand boxes.</li>
+ *   <li>Compact 2D top-right HUD summary &amp; focused citizen inspector panel.</li>
  * </ul>
  */
 @EventBusSubscriber(modid = AdvancedColonies.MOD_ID, value = Dist.CLIENT)
@@ -61,6 +65,120 @@ public final class ClientVisualDebugRenderer {
     public static void onClientDisconnect(@NotNull final ClientPlayerNetworkEvent.LoggingOut event) {
         ClientDebugCache.clear();
         ClientSpeechBubbleCache.clear();
+    }
+
+    /**
+     * Renders a compact top-right 2D HUD summary and focused citizen inspector card when the visual debugger is active.
+     */
+    @SubscribeEvent
+    public static void onRenderGuiPost(@NotNull final RenderGuiLayerEvent.Post event) {
+        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) {
+            return;
+        }
+        if (!ClientDebugCache.isActive()) {
+            return;
+        }
+        final Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.options.hideGui || mc.getDebugOverlay().showDebugScreen()) {
+            return;
+        }
+
+        final Collection<CitizenDebugSnapshot> snapshots = ClientDebugCache.getAllSnapshots();
+        if (snapshots.isEmpty()) {
+            return;
+        }
+
+        final List<Component> hudLines = new ArrayList<>();
+        int stuckCount = 0;
+        int builderCount = 0;
+        CitizenDebugSnapshot primaryFocus = null;
+
+        for (final CitizenDebugSnapshot snap : snapshots) {
+            if (snap.isGenuinelyStuck()) {
+                stuckCount++;
+            }
+            if (!snap.builderStageInfo().isEmpty()) {
+                builderCount++;
+            }
+            if (primaryFocus == null || snap.isGenuinelyStuck()) {
+                primaryFocus = snap;
+            }
+        }
+
+        hudLines.add(Component.literal(String.format(
+                "AC Visual Debugger (%d tracked%s%s)",
+                snapshots.size(),
+                stuckCount > 0 ? " | " + stuckCount + " STUCK" : "",
+                builderCount > 0 ? " | " + builderCount + " building" : ""))
+                .withStyle(stuckCount > 0 ? ChatFormatting.RED : ChatFormatting.GOLD, ChatFormatting.BOLD));
+
+        int listedStuck = 0;
+        for (final CitizenDebugSnapshot snap : snapshots) {
+            if (snap.isGenuinelyStuck() && listedStuck < 4) {
+                hudLines.add(Component.literal(String.format(
+                        "⚠ [#%d] %s (%s): Stalled %.1fs | %s",
+                        snap.citizenId(),
+                        snap.citizenName(),
+                        snap.jobName(),
+                        snap.realStalledTicks() / 20.0D,
+                        snap.workerAiState())).withStyle(ChatFormatting.RED));
+                listedStuck++;
+            }
+        }
+
+        if (snapshots.size() == 1 && primaryFocus != null) {
+            hudLines.add(Component.literal(String.format(
+                    "[#%d] %s • %s (%s)",
+                    primaryFocus.citizenId(),
+                    primaryFocus.citizenName(),
+                    primaryFocus.jobName(),
+                    primaryFocus.workBuildingInfo())).withStyle(ChatFormatting.AQUA));
+            hudLines.add(Component.literal(String.format(
+                    "AI: %s -> %s",
+                    primaryFocus.citizenAiState(),
+                    primaryFocus.workerAiState())).withStyle(ChatFormatting.WHITE));
+            if (!primaryFocus.builderStageInfo().isEmpty()) {
+                hudLines.add(Component.literal(
+                        "Build: " + primaryFocus.builderStageInfo())
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+            }
+            if (!primaryFocus.activeRequestSummary().isEmpty()) {
+                hudLines.add(Component.literal(primaryFocus.activeRequestSummary())
+                        .withStyle(ChatFormatting.YELLOW));
+            }
+            hudLines.add(Component.literal(String.format(
+                    "Speed: %.2f b/s | Dist: %.1fm | Hand: %s (%d/%d)",
+                    primaryFocus.moveSpeedBps(),
+                    primaryFocus.distanceToTarget(),
+                    primaryFocus.heldItemName(),
+                    primaryFocus.inventoryUsedSlots(),
+                    primaryFocus.inventoryTotalSlots())).withStyle(ChatFormatting.GREEN));
+        }
+
+        final Font font = mc.font;
+        final GuiGraphics graphics = event.getGuiGraphics();
+        int maxWidth = 0;
+        for (final Component line : hudLines) {
+            final int w = font.width(line);
+            if (w > maxWidth) {
+                maxWidth = w;
+            }
+        }
+
+        final int screenWidth = mc.getWindow().getGuiScaledWidth();
+        final int boxWidth = maxWidth + 10;
+        final int boxHeight = hudLines.size() * 10 + 6;
+        final int xLeft = screenWidth - boxWidth - 6;
+        final int yTop = 6;
+
+        graphics.fill(xLeft, yTop, xLeft + boxWidth, yTop + boxHeight, 0xCC0E121A);
+        graphics.fill(xLeft, yTop, xLeft + boxWidth, yTop + 1, stuckCount > 0 ? 0xFFFF4444 : 0xFF3A7AFE);
+
+        int yCursor = yTop + 4;
+        for (final Component line : hudLines) {
+            graphics.drawString(font, line, xLeft + 5, yCursor, 0xFFFFFFFF, true);
+            yCursor += 10;
+        }
     }
 
     /**
@@ -96,7 +214,14 @@ public final class ClientVisualDebugRenderer {
             final List<Component> lines = buildBillboardLines(snapshot);
             debugLineCount = lines.size();
             if (!lines.isEmpty()) {
-                renderDebugBillboard(poseStack, bufferSource, mc, font, baseAnchorY, lines);
+                renderDebugBillboard(
+                        poseStack,
+                        bufferSource,
+                        mc,
+                        font,
+                        baseAnchorY,
+                        lines,
+                        snapshot.isGenuinelyStuck());
             }
         }
 
@@ -114,7 +239,8 @@ public final class ClientVisualDebugRenderer {
             @NotNull final Minecraft mc,
             @NotNull final Font font,
             final double anchorY,
-            @NotNull final List<Component> lines) {
+            @NotNull final List<Component> lines,
+            final boolean isStuck) {
 
         int maxLineWidth = 0;
         for (final Component line : lines) {
@@ -138,7 +264,7 @@ public final class ClientVisualDebugRenderer {
         poseStack.translate(0.0F, 0.0F, 0.04F);
         poseStack.scale(0.026F, -0.026F, 0.026F);
 
-        // 1. Draw a single unified dark background panel behind the text (eliminates per-line seam Z-fighting)
+        // 1. Draw a single unified dark background panel behind the text (red top accent if genuinely stuck)
         drawUnifiedPanelBackground(
                 poseStack,
                 bufferSource,
@@ -147,7 +273,7 @@ public final class ClientVisualDebugRenderer {
                 right,
                 bottom,
                 0xD80E121A,
-                0xFF3A4A68);
+                isStuck ? 0xFFFF3B3B : 0xFF3A4A68);
 
         // 2. Push text well forward in Z (0.20F in font space) and render with POLYGON_OFFSET + dropShadow + FULL_BRIGHT
         poseStack.translate(0.0F, 0.0F, 0.20F);
@@ -311,7 +437,7 @@ public final class ClientVisualDebugRenderer {
 
     /**
      * Renders 3D pathfinding routes, node boxes (ground, ladder, rail, reached, current),
-     * and target block highlights in world space.
+     * target block highlights, and Builder/Miner work target &amp; stand boxes in world space.
      */
     @SubscribeEvent
     public static void onRenderLevelStage(@NotNull final RenderLevelStageEvent event) {
@@ -350,20 +476,24 @@ public final class ClientVisualDebugRenderer {
 
     @NotNull
     private static List<Component> buildBillboardLines(@NotNull final CitizenDebugSnapshot snapshot) {
-        final List<Component> lines = new ArrayList<>(4);
+        final List<Component> lines = new ArrayList<>(6);
 
-        // Line 1: [#ID] Name (Job)
+        // Line 1: [#ID] Name (Job • WorkBuilding)
+        final String buildingSuffix = ("None".equals(snapshot.workBuildingInfo()) || snapshot.workBuildingInfo().isEmpty())
+                ? ""
+                : " • " + snapshot.workBuildingInfo();
         lines.add(Component.literal(String.format(
-                "[#%d] %s (%s)",
+                "[#%d] %s (%s%s)",
                 snapshot.citizenId(),
                 snapshot.citizenName(),
-                snapshot.jobName())).withStyle(ChatFormatting.GOLD));
+                snapshot.jobName(),
+                buildingSuffix)).withStyle(ChatFormatting.GOLD));
 
-        // Line 2: Actions (Citizen AI State + Worker AI State)
+        // Line 2: Actions (Citizen AI State + Worker AI State + Builder Progress + Requests)
         if (ClientDebugCache.isShowActions()) {
             final String cState = snapshot.citizenAiState();
             final String wState = snapshot.workerAiState();
-            final boolean isCriticalState = snapshot.stuckLevel() > 0
+            final boolean isCriticalState = snapshot.isGenuinelyStuck()
                     || cState.contains("SICK")
                     || cState.contains("FLEE")
                     || wState.contains("FLEE");
@@ -379,46 +509,74 @@ public final class ClientVisualDebugRenderer {
                     "AI: %s -> %s",
                     cState,
                     wState)).withStyle(actionColor));
+
+            if (!snapshot.builderStageInfo().isEmpty()) {
+                final BlockPos workPos = snapshot.workTargetPos();
+                final String posStr = workPos != null
+                        ? String.format(" @ (%d, %d, %d)", workPos.getX(), workPos.getY(), workPos.getZ())
+                        : "";
+                lines.add(Component.literal("Build: " + snapshot.builderStageInfo() + posStr)
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+            }
+
+            if (!snapshot.activeRequestSummary().isEmpty()) {
+                lines.add(Component.literal(snapshot.activeRequestSummary())
+                        .withStyle(ChatFormatting.GOLD));
+            }
         }
 
-        // Line 3: Stats (Health, Saturation, Happiness)
+        // Line 3: Stats (Health, Saturation, Happiness, Held Item, Inventory Fill)
         if (ClientDebugCache.isShowStats()) {
             final ChatFormatting statsColor = (snapshot.health() < snapshot.maxHealth() * 0.4F || snapshot.saturation() < 4.0D)
                     ? ChatFormatting.RED
                     : ChatFormatting.GREEN;
+            final String invSummary = snapshot.inventoryTotalSlots() > 0
+                    ? String.format(" | Hand: %s | Inv: %d/%d",
+                            snapshot.heldItemName(),
+                            snapshot.inventoryUsedSlots(),
+                            snapshot.inventoryTotalSlots())
+                    : "";
             lines.add(Component.literal(String.format(
-                    "HP: %.1f/%.1f | Sat: %.1f | Hap: %.1f",
+                    "HP: %.1f/%.1f | Sat: %.1f | Hap: %.1f%s",
                     snapshot.health(),
                     snapshot.maxHealth(),
                     snapshot.saturation(),
-                    snapshot.happiness())).withStyle(statsColor));
+                    snapshot.happiness(),
+                    invSummary)).withStyle(statsColor));
         }
 
-        // Line 4: Pathfinding & Stuck Diagnostics
+        // Line 4: Pathfinding & Genuine 3D Stuck Diagnostics (no more false-positive globalTimeout alerts!)
         if (ClientDebugCache.isShowPathfinding()) {
             final BlockPos target = snapshot.targetPos();
             final String targetStr = target != null
                     ? String.format("(%d, %d, %d)", target.getX(), target.getY(), target.getZ())
                     : "None";
 
-            if (snapshot.stuckLevel() > 0 || snapshot.globalTimeoutTicks() >= 120) {
-                final double stuckSeconds = snapshot.globalTimeoutTicks() / 20.0D;
+            if (snapshot.isGenuinelyStuck()) {
+                final double stalledSeconds = snapshot.realStalledTicks() / 20.0D;
+                final String rescueTag = !"None".equals(snapshot.rescueAction())
+                        ? " | " + snapshot.rescueAction()
+                        : "";
                 lines.add(Component.literal(String.format(
-                        "STUCK [Lv.%d | %.1fs] -> %s",
+                        "⚠ STUCK [Lv.%d | Stalled %.1fs%s] -> %s",
                         snapshot.stuckLevel(),
-                        stuckSeconds,
+                        stalledSeconds,
+                        rescueTag,
                         targetStr)).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
             } else if (!snapshot.pathNodes().isEmpty()) {
                 lines.add(Component.literal(String.format(
-                        "Path: %s [%d/%d] -> %s",
+                        "Path: %s [%d/%d] | %.1f b/s | %.1fm -> %s",
                         snapshot.pathStatus(),
                         Math.min(snapshot.currentNodeIndex() + 1, snapshot.pathNodes().size()),
                         snapshot.pathNodes().size(),
+                        snapshot.moveSpeedBps(),
+                        snapshot.distanceToTarget(),
                         targetStr)).withStyle(ChatFormatting.YELLOW));
             } else {
                 lines.add(Component.literal(String.format(
-                        "Path: %s -> %s",
+                        "Path: %s | %.1f b/s -> %s",
                         snapshot.pathStatus(),
+                        snapshot.moveSpeedBps(),
                         targetStr)).withStyle(ChatFormatting.GRAY));
             }
         }
@@ -432,7 +590,7 @@ public final class ClientVisualDebugRenderer {
             @NotNull final Minecraft mc,
             @NotNull final CitizenDebugSnapshot snapshot) {
         final List<CitizenDebugSnapshot.PathNodeEntry> nodes = snapshot.pathNodes();
-        final boolean isStuck = snapshot.stuckLevel() > 0 || snapshot.globalTimeoutTicks() >= 120;
+        final boolean isStuck = snapshot.isGenuinelyStuck();
 
         // 1. Render all path nodes and connecting segments
         for (int i = 0; i < nodes.size(); i++) {
@@ -511,7 +669,9 @@ public final class ClientVisualDebugRenderer {
             }
         }
 
-        // 2. Highlight target block position and draw direct line when stuck or lacking path nodes
+        final Entity citizenEntity = mc.level != null ? mc.level.getEntity(snapshot.entityId()) : null;
+
+        // 2. Highlight navigation target block position and draw direct line when stuck or lacking path nodes
         final BlockPos targetPos = snapshot.targetPos();
         if (targetPos != null) {
             final float tr = isStuck ? 1.00F : 0.95F;
@@ -532,23 +692,87 @@ public final class ClientVisualDebugRenderer {
                     tb,
                     0.95F);
 
-            if (isStuck || nodes.isEmpty()) {
-                final Entity citizenEntity = mc.level != null ? mc.level.getEntity(snapshot.entityId()) : null;
-                if (citizenEntity != null) {
-                    drawLineSegment(
-                            poseStack,
-                            consumer,
-                            (float) citizenEntity.getX(),
-                            (float) (citizenEntity.getY() + 1.0D),
-                            (float) citizenEntity.getZ(),
-                            (float) (targetPos.getX() + 0.5D),
-                            (float) (targetPos.getY() + 0.5D),
-                            (float) (targetPos.getZ() + 0.5D),
-                            tr,
-                            tg,
-                            tb,
-                            0.90F);
-                }
+            if ((isStuck || nodes.isEmpty()) && citizenEntity != null) {
+                drawLineSegment(
+                        poseStack,
+                        consumer,
+                        (float) citizenEntity.getX(),
+                        (float) (citizenEntity.getY() + 1.0D),
+                        (float) citizenEntity.getZ(),
+                        (float) (targetPos.getX() + 0.5D),
+                        (float) (targetPos.getY() + 0.5D),
+                        (float) (targetPos.getZ() + 0.5D),
+                        tr,
+                        tg,
+                        tb,
+                        0.90F);
+            }
+        }
+
+        // 3. Highlight Builder/Miner active structure block (workTargetPos) & standing position (workStandPos)
+        final BlockPos workTarget = snapshot.workTargetPos();
+        if (workTarget != null) {
+            LevelRenderer.renderLineBox(
+                    poseStack,
+                    consumer,
+                    workTarget.getX() - 0.04D,
+                    workTarget.getY() - 0.04D,
+                    workTarget.getZ() - 0.04D,
+                    workTarget.getX() + 1.04D,
+                    workTarget.getY() + 1.04D,
+                    workTarget.getZ() + 1.04D,
+                    1.00F,
+                    0.60F,
+                    0.05F,
+                    0.95F);
+
+            if (citizenEntity != null) {
+                drawLineSegment(
+                        poseStack,
+                        consumer,
+                        (float) citizenEntity.getX(),
+                        (float) (citizenEntity.getY() + 1.15D),
+                        (float) citizenEntity.getZ(),
+                        (float) (workTarget.getX() + 0.5D),
+                        (float) (workTarget.getY() + 0.5D),
+                        (float) (workTarget.getZ() + 0.5D),
+                        1.00F,
+                        0.60F,
+                        0.05F,
+                        0.85F);
+            }
+        }
+
+        final BlockPos workStand = snapshot.workStandPos();
+        if (workStand != null) {
+            LevelRenderer.renderLineBox(
+                    poseStack,
+                    consumer,
+                    workStand.getX() + 0.10D,
+                    workStand.getY() + 0.02D,
+                    workStand.getZ() + 0.10D,
+                    workStand.getX() + 0.90D,
+                    workStand.getY() + 0.35D,
+                    workStand.getZ() + 0.90D,
+                    0.10F,
+                    0.95F,
+                    0.75F,
+                    0.90F);
+
+            if (workTarget != null) {
+                drawLineSegment(
+                        poseStack,
+                        consumer,
+                        (float) (workStand.getX() + 0.5D),
+                        (float) (workStand.getY() + 0.25D),
+                        (float) (workStand.getZ() + 0.5D),
+                        (float) (workTarget.getX() + 0.5D),
+                        (float) (workTarget.getY() + 0.5D),
+                        (float) (workTarget.getZ() + 0.5D),
+                        0.10F,
+                        0.95F,
+                        0.75F,
+                        0.80F);
             }
         }
     }

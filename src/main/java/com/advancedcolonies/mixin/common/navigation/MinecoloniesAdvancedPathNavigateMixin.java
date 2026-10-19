@@ -84,4 +84,15 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             NavigationStuckAndRescueHelper.centerEntityOnRailExit(this.ourEntity, node.x, node.y, node.z);
         }
     }
+
+    @Inject(method = "isStuck", at = @At("RETURN"), cancellable = true, remap = false)
+    private void advancedColonies$onIsStuck(final CallbackInfoReturnable<Boolean> cir) {
+        if (!cir.getReturnValueZ() && this.ourEntity != null) {
+            final NavigationStuckAndRescueHelper.CitizenMovementTracker tracker =
+                    NavigationStuckAndRescueHelper.getTracker(this.ourEntity.getId());
+            if (tracker != null && tracker.getRealStalledTicks() >= NavigationStuckAndRescueHelper.STAGE_2_STEP_TP_TICKS) {
+                cir.setReturnValue(true);
+            }
+        }
+    }
 }

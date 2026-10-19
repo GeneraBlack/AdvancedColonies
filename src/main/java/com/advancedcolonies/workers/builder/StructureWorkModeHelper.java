@@ -146,6 +146,9 @@ public final class StructureWorkModeHelper {
 
             case NORMAL:
             default:
+                if (ai instanceof EntityAIStructureBuilder) {
+                    return safeStand == null || worker.blockPosition().distSqr(safeStand) <= 9.0D;
+                }
                 return false;
         }
     }

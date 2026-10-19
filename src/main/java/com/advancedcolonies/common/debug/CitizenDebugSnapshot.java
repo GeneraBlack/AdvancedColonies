@@ -9,26 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Immutable snapshot of a citizen's live AI actions, vitals/stats, and 3D pathfinding nodes
+ * Immutable snapshot of a citizen's live AI actions, vitals/stats, 3D movement & stall telemetry,
+ * inventory/equipment, open requests, Builder construction progress, and 3D pathfinding nodes
  * captured on the logical server and synchronized to subscribed clients for visual debugging.
- *
- * @param entityId           the runtime entity ID of the {@code EntityCitizen}
- * @param citizenId          the persistent MineColonies civilian ID
- * @param colonyId           the ID of the citizen's colony
- * @param citizenName        the citizen's display name
- * @param jobName            the localized or key name of the citizen's job
- * @param citizenAiState     the top-level citizen AI state (e.g. {@code WORK}, {@code EAT}, {@code SICK})
- * @param workerAiState      the job-specific worker AI state (e.g. {@code CRAFT}, {@code DECIDE}, {@code BUILD_STEP})
- * @param health             current health points
- * @param maxHealth          maximum health points
- * @param saturation         current food saturation (0..20)
- * @param happiness          current overall happiness (0..10)
- * @param stuckLevel         current pathfinding stuck level ({@code <= 0} normal, {@code > 0} stuck)
- * @param globalTimeoutTicks current pathfinding global timeout ticks
- * @param pathStatus         current pathfinding status label
- * @param targetPos          current navigation target block position, or {@code null}
- * @param currentNodeIndex   index of the active path node in {@code pathNodes}
- * @param pathNodes          ordered list of pathfinding nodes along the citizen's active path
  */
 public record CitizenDebugSnapshot(
         int entityId,
@@ -44,6 +27,19 @@ public record CitizenDebugSnapshot(
         double happiness,
         int stuckLevel,
         int globalTimeoutTicks,
+        int realStalledTicks,
+        float moveSpeedBps,
+        float distanceToTarget,
+        @NotNull String rescueAction,
+        @NotNull String workBuildingInfo,
+        @Nullable BlockPos workBuildingPos,
+        @NotNull String heldItemName,
+        int inventoryUsedSlots,
+        int inventoryTotalSlots,
+        @NotNull String activeRequestSummary,
+        @NotNull String builderStageInfo,
+        @Nullable BlockPos workTargetPos,
+        @Nullable BlockPos workStandPos,
         @NotNull String pathStatus,
         @Nullable BlockPos targetPos,
         int currentNodeIndex,
@@ -51,6 +47,14 @@ public record CitizenDebugSnapshot(
 
     /** Maximum number of path nodes serialized per citizen snapshot to keep packets compact. */
     public static final int MAX_SERIALIZED_NODES = 64;
+
+    /**
+     * Returns {@code true} only when the citizen is genuinely physically stalled (3+ seconds of zero spatial progress
+     * while trying to navigate) or in an active MineColonies stuck recovery level.
+     */
+    public boolean isGenuinelyStuck() {
+        return this.realStalledTicks >= 60 || this.stuckLevel > 0;
+    }
 
     /**
      * Represents a single 3D pathfinding node for client-side path line and box rendering.
@@ -122,6 +126,28 @@ public record CitizenDebugSnapshot(
         buf.writeDouble(this.happiness);
         buf.writeVarInt(this.stuckLevel);
         buf.writeVarInt(this.globalTimeoutTicks);
+        buf.writeVarInt(this.realStalledTicks);
+        buf.writeFloat(this.moveSpeedBps);
+        buf.writeFloat(this.distanceToTarget);
+        buf.writeUtf(this.rescueAction, 32);
+        buf.writeUtf(this.workBuildingInfo, 64);
+        buf.writeBoolean(this.workBuildingPos != null);
+        if (this.workBuildingPos != null) {
+            buf.writeBlockPos(this.workBuildingPos);
+        }
+        buf.writeUtf(this.heldItemName, 64);
+        buf.writeVarInt(this.inventoryUsedSlots);
+        buf.writeVarInt(this.inventoryTotalSlots);
+        buf.writeUtf(this.activeRequestSummary, 96);
+        buf.writeUtf(this.builderStageInfo, 96);
+        buf.writeBoolean(this.workTargetPos != null);
+        if (this.workTargetPos != null) {
+            buf.writeBlockPos(this.workTargetPos);
+        }
+        buf.writeBoolean(this.workStandPos != null);
+        if (this.workStandPos != null) {
+            buf.writeBlockPos(this.workStandPos);
+        }
         buf.writeUtf(this.pathStatus, 48);
         buf.writeBoolean(this.targetPos != null);
         if (this.targetPos != null) {
@@ -156,6 +182,19 @@ public record CitizenDebugSnapshot(
         final double happiness = buf.readDouble();
         final int stuckLevel = buf.readVarInt();
         final int globalTimeoutTicks = buf.readVarInt();
+        final int realStalledTicks = buf.readVarInt();
+        final float moveSpeedBps = buf.readFloat();
+        final float distanceToTarget = buf.readFloat();
+        final String rescueAction = buf.readUtf(32);
+        final String workBuildingInfo = buf.readUtf(64);
+        final BlockPos workBuildingPos = buf.readBoolean() ? buf.readBlockPos() : null;
+        final String heldItemName = buf.readUtf(64);
+        final int inventoryUsedSlots = buf.readVarInt();
+        final int inventoryTotalSlots = buf.readVarInt();
+        final String activeRequestSummary = buf.readUtf(96);
+        final String builderStageInfo = buf.readUtf(96);
+        final BlockPos workTargetPos = buf.readBoolean() ? buf.readBlockPos() : null;
+        final BlockPos workStandPos = buf.readBoolean() ? buf.readBlockPos() : null;
         final String pathStatus = buf.readUtf(48);
         final BlockPos targetPos = buf.readBoolean() ? buf.readBlockPos() : null;
         final int currentNodeIndex = buf.readVarInt();
@@ -178,6 +217,19 @@ public record CitizenDebugSnapshot(
                 happiness,
                 stuckLevel,
                 globalTimeoutTicks,
+                realStalledTicks,
+                moveSpeedBps,
+                distanceToTarget,
+                rescueAction,
+                workBuildingInfo,
+                workBuildingPos,
+                heldItemName,
+                inventoryUsedSlots,
+                inventoryTotalSlots,
+                activeRequestSummary,
+                builderStageInfo,
+                workTargetPos,
+                workStandPos,
                 pathStatus,
                 targetPos,
                 currentNodeIndex,

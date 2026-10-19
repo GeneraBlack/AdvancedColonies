@@ -110,9 +110,16 @@ All visual debugger commands are available under `/acdebug` (configurable permis
 | Command | Description |
 | :--- | :--- |
 | `/acdebug colony [colonyId]` | Toggles the 3D visual debugger for all citizens in your current (or specified) colony. |
-| `/acdebug citizen <citizenId> [colonyId]` | Toggles the 3D visual debugger for a specific citizen ID. |
+| `/acdebug citizen <citizenId>` | Toggles the 3D visual debugger for a specific citizen ID. |
+| `/acdebug name <citizenName>` | Toggles the 3D visual debugger for a citizen matching the given name. |
 | `/acdebug look` | Toggles the 3D visual debugger for the citizen you are currently looking at (up to 32 blocks). |
-| `/acdebug filter <actions\|stats\|pathfinding> <true\|false>` | Shows or hides specific layers (AI states, vitals/stats, or 3D pathfinding routes). |
+| `/acdebug job <jobFilter>` | Filters colony-wide visual debugging to a specific job (e.g. `/acdebug job builder` or `/acdebug job all`). |
+| `/acdebug stuck` | Filters to genuinely stuck/stalled citizens and prints clickable `[Focus]`, `[Inspect]`, `[TP]`, `[Unstuck]` buttons. |
+| `/acdebug unstuck [<id>\|look\|all]` | Executes multi-stage unstuck teleport and resets stuck Builder AI state. |
+| `/acdebug inspect [<id>\|look]` | Prints a comprehensive diagnostic inspection report for a citizen in chat. |
+| `/acdebug tp <citizenId>` | Teleports you directly to the specified citizen. |
+| `/acdebug list [<filter>]` | Lists loaded citizens in the colony with status and clickable action buttons. |
+| `/acdebug layer <actions\|stats\|path\|all>` | Shows or hides specific layers (AI states, vitals/stats, or 3D pathfinding routes). |
 | `/acdebug off` | Disables all active debug overlays and clears the client cache. |
 
 ---
