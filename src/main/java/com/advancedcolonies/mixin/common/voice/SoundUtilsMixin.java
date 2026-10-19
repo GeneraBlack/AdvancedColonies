@@ -34,15 +34,18 @@ public abstract class SoundUtilsMixin {
 
     @Inject(
             method = "playSoundAtCitizenWith(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lcom/minecolonies/api/sounds/EventType;Lcom/minecolonies/api/colony/ICivilianData;DD)V",
-            at = @At("HEAD"))
+            at = @At("HEAD"),
+            cancellable = true)
     private static void advancedcolonies$onPlaySoundAtCitizenWith(
             final Level worldIn,
             @NotNull final BlockPos pos,
             final EventType event,
             @Nullable final ICivilianData citizen,
+            final double chance,
             final double volume,
-            final double pitch,
             final CallbackInfo ci) {
-        CitizenVoiceEngine.onDirectSoundAtCitizen(worldIn, pos, event, citizen);
+        if (CitizenVoiceEngine.handleDirectSoundAtCitizen(worldIn, pos, event, citizen, chance, volume)) {
+            ci.cancel();
+        }
     }
 }

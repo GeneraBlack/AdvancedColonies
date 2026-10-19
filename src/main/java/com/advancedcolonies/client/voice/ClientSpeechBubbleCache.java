@@ -1,6 +1,7 @@
 package com.advancedcolonies.client.voice;
 
 import com.advancedcolonies.network.CitizenVoicelinePayload;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,22 +58,32 @@ public final class ClientSpeechBubbleCache {
     }
 
     /**
-     * Registers an incoming {@link CitizenVoicelinePayload} from the server.
+     * Registers an incoming {@link CitizenVoicelinePayload} from the server
+     * and plays the synchronized 3D voice clip on the client.
      *
      * @param payload the voiceline payload
      */
     public static void applyPayload(@NotNull final CitizenVoicelinePayload payload) {
-        final long durationMs = Math.max(1500L, payload.durationTicks() * 50L);
-        ACTIVE_BUBBLES.put(
-                payload.entityId(),
-                new SpeechBubbleEntry(
-                        payload.entityId(),
-                        payload.citizenName(),
-                        payload.jobName(),
-                        payload.text(),
-                        payload.accentColorRgb(),
-                        System.currentTimeMillis(),
-                        durationMs));
+        if (!payload.text().isEmpty()) {
+            final long durationMs = Math.max(1500L, payload.durationTicks() * 50L);
+            ACTIVE_BUBBLES.put(
+                    payload.entityId(),
+                    new SpeechBubbleEntry(
+                            payload.entityId(),
+                            payload.citizenName(),
+                            payload.jobName(),
+                            payload.text(),
+                            payload.accentColorRgb(),
+                            System.currentTimeMillis(),
+                            durationMs));
+        }
+
+        if (!payload.soundEventKey().isEmpty() && FMLEnvironment.dist.isClient()) {
+            ClientVoiceAudioPlayer.playCitizenVoice(
+                    payload.entityId(),
+                    payload.soundEventKey(),
+                    payload.pitch());
+        }
     }
 
     /**
@@ -100,5 +111,8 @@ public final class ClientSpeechBubbleCache {
      */
     public static void clear() {
         ACTIVE_BUBBLES.clear();
+        if (FMLEnvironment.dist.isClient()) {
+            ClientVoiceAudioPlayer.clear();
+        }
     }
 }

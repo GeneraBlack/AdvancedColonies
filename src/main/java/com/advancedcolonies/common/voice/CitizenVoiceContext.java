@@ -347,6 +347,21 @@ public enum CitizenVoiceContext {
             )
     ),
 
+    PLAYER_FAREWELL(
+            EventType.FAREWELL,
+            0x88FFAA,
+            List.of(
+                    "Safe travels out there! We'll keep the colony running strong while you're away!",
+                    "Take care of yourself! See you next time you stop by our district!",
+                    "Until next time! I'll get right back to my tasks!",
+                    "Watch your step out in the wilds—come back to us safe and sound!",
+                    "Good luck on your journey! We've got everything covered here in town!",
+                    "See you later! Have a wonderful rest of your day!",
+                    "Farewell for now! Don't be a stranger!",
+                    "Back to the craft for me—catch you later, friend!"
+            )
+    ),
+
     ACTIVE_JOB_WORK(
             EventType.SUCCESS,
             0xFFFFFF,

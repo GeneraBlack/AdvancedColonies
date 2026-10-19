@@ -351,7 +351,7 @@ JOB_FAMILY_LINES = {
 }
 
 ROLE_TO_JOB_FAMILY = {
-    "alchemist": "enchanter",
+    "alchemist": None,
     "archertraining": "guard",
     "baker": "cook",
     "beekeeper": "herder",
@@ -367,7 +367,7 @@ ROLE_TO_JOB_FAMILY = {
     "cook": "cook",
     "cookassistant": "cook",
     "cowboy": "herder",
-    "crusher": "miner",
+    "crusher": "carpenter",
     "deliveryman": "deliveryman",
     "druid": "guard",
     "dyer": "carpenter",
@@ -380,7 +380,7 @@ ROLE_TO_JOB_FAMILY = {
     "healer": "healer",
     "knight": "guard",
     "lumberjack": "lumberjack",
-    "mechanic": "blacksmith",
+    "mechanic": "carpenter",
     "miner": "miner",
     "netherworker": "miner",
     "planter": "farmer",
@@ -391,7 +391,7 @@ ROLE_TO_JOB_FAMILY = {
     "researcher": "researcher",
     "sawmill": "carpenter",
     "shepherd": "herder",
-    "sifter": "miner",
+    "sifter": "carpenter",
     "smelter": "blacksmith",
     "stablemaster": "herder",
     "stonemason": "carpenter",
@@ -399,10 +399,99 @@ ROLE_TO_JOB_FAMILY = {
     "student": "researcher",
     "swineherder": "herder",
     "teacher": "researcher",
-    "undertaker": "healer",
+    "undertaker": None,
     "unemployed": None,
     "visitor": None,
 }
+
+# Restricts which voice profile indices (0..3) can use the family's job_<family>_01 clip for a specific role
+ROLE_ALLOWED_JOB_PROFILES = {
+    "composter": {0},
+    "florist": {0, 1},
+    "netherworker": {2},
+    "pupil": {2, 3},
+    "student": {2, 3},
+    "teacher": {2, 3},
+    "smelter": {2},
+    "stonesmeltery": {2},
+    "glassblower": {2},
+    "sawmill": {0, 1, 3},
+    "stonemason": {1, 2, 3},
+    "concretemixer": {2, 3},
+    "fletcher": {0, 3},
+    "mechanic": {3},
+    "dyer": {3},
+    "crusher": {3},
+    "sifter": {3},
+    "beekeeper": {1, 2},
+    "cowboy": {0, 1, 2},
+    "shepherd": {0, 1, 2},
+    "chickenherder": {0, 1, 2},
+    "swineherder": {0, 2},
+    "rabbitherder": {0, 2},
+    "stablemaster": {0, 2},
+    "fisherman": {3},
+}
+
+
+def get_valid_job_clips(role: str, family: str | None, voice_key: str, profile_num: int, job_sound_map: dict) -> list[str]:
+    if family is None:
+        return []
+    allowed_profiles = ROLE_ALLOWED_JOB_PROFILES.get(role, {0, 1, 2, 3})
+    if profile_num not in allowed_profiles:
+        return []
+    return list(job_sound_map.get((voice_key, family), []))
+
+
+def get_filtered_event_clips(
+    role: str,
+    family: str | None,
+    voice_key: str,
+    profile_num: int,
+    canonical_event: str,
+    event_sound_map: dict,
+    job_sound_map: dict,
+) -> list[str]:
+    is_guard = family == "guard"
+    c1 = f"advancedcolonies:voice/{voice_key}/{canonical_event}_01"
+    c2 = f"advancedcolonies:voice/{voice_key}/{canonical_event}_02"
+
+    if canonical_event == "danger":
+        if is_guard:
+            if profile_num == 3:
+                return [c2]
+            return [c1, c2]
+        else:
+            if profile_num == 2:
+                return [c2]
+            if profile_num == 3:
+                return [c1]
+            return [c1, c2]
+
+    if canonical_event == "interaction":
+        if is_guard:
+            if profile_num == 0:
+                return [c1] + get_valid_job_clips(role, family, voice_key, profile_num, job_sound_map)
+            if profile_num == 1:
+                return [c1, c2]
+            if profile_num == 2:
+                return [c2] + get_valid_job_clips(role, family, voice_key, profile_num, job_sound_map)
+            return [c1, c2]
+        else:
+            if profile_num == 0:
+                return [c1, c2]
+            if profile_num == 1:
+                return [c2]
+            if profile_num == 2:
+                return [c1, c2]
+            return [c2]
+
+    if canonical_event == "unhappy":
+        if profile_num == 2:
+            return [c2]
+        return [c1, c2]
+
+    return list(event_sound_map[(voice_key, canonical_event)])
 
 
 def pcm_to_ogg_sync(pcm_bytes: bytes, ogg_path: Path) -> None:
@@ -525,12 +614,9 @@ async def main():
     parser.add_argument("--api-key", default=os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"),
                         required=False, help="Google Gemini API Key")
     parser.add_argument("--force", action="store_true", help="Overwrite existing .ogg files")
+    parser.add_argument("--json-only", action="store_true", help="Only regenerate sounds.json files without calling Gemini API")
     args = parser.parse_args()
 
-    if not args.api_key:
-        raise SystemExit("Please provide --api-key or set GEMINI_API_KEY.")
-
-    client = genai.Client(api_key=args.api_key)
     voice_keys = ["male1", "male2", "male3", "male4", "female1", "female2", "female3", "female4"]
 
     event_sound_map = {}
@@ -559,39 +645,59 @@ async def main():
             ]
             per_voice_specs[voice_key].append((c_job, "job", line))
 
-    total_clips = sum(len(v) for v in per_voice_specs.values())
-    progress_counter = [0]
-    print(f"Starting Gemini 3.8 Live native emotional synthesis for {total_clips} .ogg clips across 8 voices...")
+    if not args.json_only:
+        if not args.api_key:
+            raise SystemExit("Please provide --api-key or set GEMINI_API_KEY (or pass --json-only).")
 
-    sem = asyncio.Semaphore(4)
+        client = genai.Client(api_key=args.api_key)
+        total_clips = sum(len(v) for v in per_voice_specs.values())
+        progress_counter = [0]
+        print(f"Starting Gemini 3.8 Live native emotional synthesis for {total_clips} .ogg clips across 8 voices...")
 
-    async def run_voice(vk: str):
-        async with sem:
-            await synthesize_voice_profile_live(
-                client,
-                vk,
-                per_voice_specs[vk],
-                args.force,
-                progress_counter,
-                total_clips,
-            )
+        sem = asyncio.Semaphore(4)
 
-    await asyncio.gather(*(run_voice(vk) for vk in voice_keys))
-    print(f"All {total_clips} Gemini 3.8 Live emotional .ogg files synthesized successfully!")
+        async def run_voice(vk: str):
+            async with sem:
+                await synthesize_voice_profile_live(
+                    client,
+                    vk,
+                    per_voice_specs[vk],
+                    args.force,
+                    progress_counter,
+                    total_clips,
+                )
+
+        await asyncio.gather(*(run_voice(vk) for vk in voice_keys))
+        print(f"All {total_clips} Gemini 3.8 Live emotional .ogg files synthesized successfully!")
 
     adv_sounds = {}
     for (voice_key, event_id), sound_paths in sorted(event_sound_map.items()):
         key = f"voice.{voice_key}.{event_id}"
         adv_sounds[key] = {
             "category": "neutral",
-            "sounds": [{"name": sp, "stream": False} for sp in sound_paths],
+            "sounds": [{"name": sp, "stream": False, "attenuation_distance": 28} for sp in sound_paths],
         }
     for (voice_key, family_id), sound_paths in sorted(job_sound_map.items()):
         key = f"voice.{voice_key}.job.{family_id}"
         adv_sounds[key] = {
             "category": "neutral",
-            "sounds": [{"name": sp, "stream": False} for sp in sound_paths],
+            "sounds": [{"name": sp, "stream": False, "attenuation_distance": 28} for sp in sound_paths],
         }
+    # Register every individual clip key (e.g. voice.male1.danger_01, voice.male1.job_builder_01)
+    # for 1:1 synchronized audio + 3D speech bubble playback.
+    for voice_key, specs in sorted(per_voice_specs.items()):
+        for clip_name, _emotion_key, _text in specs:
+            clip_key = f"voice.{voice_key}.{clip_name}"
+            adv_sounds[clip_key] = {
+                "category": "neutral",
+                "sounds": [
+                    {
+                        "name": f"advancedcolonies:voice/{voice_key}/{clip_name}",
+                        "stream": False,
+                        "attenuation_distance": 28,
+                    }
+                ],
+            }
 
     ADV_SOUNDS_JSON.parent.mkdir(parents=True, exist_ok=True)
     ADV_SOUNDS_JSON.write_text(json.dumps(adv_sounds, indent=2), encoding="utf-8")
@@ -627,38 +733,54 @@ async def main():
     mc_sounds = {}
     for role, family in sorted(ROLE_TO_JOB_FAMILY.items()):
         if role == "child":
-            for child_voice, mapped_voice in [
-                ("male", "male3"),
-                ("male1", "male3"),
-                ("male2", "male2"),
-                ("female", "female3"),
-                ("female1", "female3"),
-                ("female2", "female2"),
+            for child_voice, mapped_voice, mapped_profile in [
+                ("male", "male3", 2),
+                ("male1", "male3", 2),
+                ("male2", "male2", 1),
+                ("female", "female3", 2),
+                ("female1", "female3", 2),
+                ("female2", "female2", 1),
             ]:
                 for raw_event, canonical_event in sorted(event_aliases.items()):
-                    sound_list = list(event_sound_map[(mapped_voice, canonical_event)])
+                    sound_list = get_filtered_event_clips(
+                        role, None, mapped_voice, mapped_profile, canonical_event, event_sound_map, job_sound_map
+                    )
                     event_key = f"citizen.child.{child_voice}.{raw_event}"
                     mc_sounds[event_key] = {
+                        "replace": True,
                         "category": "neutral",
-                        "sounds": [{"name": sp, "stream": False, "weight": 3, "pitch": 1.15} for sp in sound_list],
+                        "sounds": [
+                            {"name": sp, "stream": False, "weight": 3, "pitch": 1.15, "attenuation_distance": 28}
+                            for sp in sound_list
+                        ],
                     }
             continue
 
-        for voice_key in voice_keys:
+        for v_idx, voice_key in enumerate(voice_keys):
+            profile_num = v_idx % 4
             for raw_event, canonical_event in sorted(event_aliases.items()):
-                sound_list = list(event_sound_map[(voice_key, canonical_event)])
-                if family is not None and canonical_event in ("general", "success", "interaction"):
-                    sound_list.extend(job_sound_map[(voice_key, family)])
+                sound_list = get_filtered_event_clips(
+                    role, family, voice_key, profile_num, canonical_event, event_sound_map, job_sound_map
+                )
+                if canonical_event in ("general", "success"):
+                    for job_clip in get_valid_job_clips(role, family, voice_key, profile_num, job_sound_map):
+                        if job_clip not in sound_list:
+                            sound_list.append(job_clip)
                 event_key = f"citizen.{role}.{voice_key}.{raw_event}"
                 mc_sounds[event_key] = {
+                    "replace": True,
                     "category": "neutral",
-                    "sounds": [{"name": sp, "stream": False, "weight": 3} for sp in sound_list],
+                    "sounds": [
+                        {"name": sp, "stream": False, "weight": 3, "attenuation_distance": 28}
+                        for sp in sound_list
+                    ],
                 }
 
     MC_SOUNDS_JSON.parent.mkdir(parents=True, exist_ok=True)
     MC_SOUNDS_JSON.write_text(json.dumps(mc_sounds, indent=2), encoding="utf-8")
-    print(f"Updated {ADV_SOUNDS_JSON} and {MC_SOUNDS_JSON}")
+    print(f"Updated {ADV_SOUNDS_JSON} ({len(adv_sounds)} keys) and {MC_SOUNDS_JSON} ({len(mc_sounds)} keys)")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
