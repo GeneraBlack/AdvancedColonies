@@ -22,6 +22,7 @@
     "buildings.tavern.VisitorCitizenMixin",
     "buildings.warehouse.CourierAssignmentModuleMixin",
     "buildings.warehouse.CourierAssignmentModuleViewMixin",
+    "common.bee.BeeMixin",
     "common.eating.CitizenFoodHandlerMixin",
     "common.eating.EntityAIEatTaskMixin",
     "common.eating.FoodUtilsMixin",

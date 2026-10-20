@@ -1,5 +1,6 @@
 package com.advancedcolonies.mixin.workers.herder;
 
+import com.advancedcolonies.workers.herder.BeeAIHelper;
 import com.advancedcolonies.workers.herder.HerdingAndButcherHelper;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -10,7 +11,6 @@ import com.minecolonies.core.colony.jobs.JobBeekeeper;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import com.minecolonies.core.entity.ai.workers.production.agriculture.EntityAIWorkBeekeeper;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.animal.Bee;
 import org.jetbrains.annotations.NotNull;
@@ -108,12 +108,7 @@ public abstract class EntityAIWorkBeekeeperMixin extends AbstractEntityAIInterac
         }
 
         final List<Bee> bees = searchForAnimals(world, building);
-        for (final Bee bee : bees) {
-            final CompoundTag tag = bee.getPersistentData();
-            if (!tag.getBoolean("AdvancedColonies_Penned")) {
-                tag.putBoolean("AdvancedColonies_Penned", true);
-            }
-        }
+        BeeAIHelper.bindColonyBeesToHives(world, hives, bees);
 
         final JobBeekeeper beekeeperJob = worker.getCitizenJobHandler().getColonyJob(JobBeekeeper.class);
         if (beekeeperJob != null) {

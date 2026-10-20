@@ -37,6 +37,11 @@ public final class AgricultureAndHerdingConfig {
     public final ModConfigSpec.IntValue cowboyMaxMilkPerVisit;
     public final ModConfigSpec.BooleanValue disableLargeBottleCooldown;
     public final ModConfigSpec.BooleanValue enableBeekeeperHarvestPriority;
+    public final ModConfigSpec.BooleanValue enableEnhancedBeeAI;
+    public final ModConfigSpec.IntValue beeMaxHiveWanderRadius;
+    public final ModConfigSpec.IntValue beeFlowerSearchRadius;
+    public final ModConfigSpec.IntValue beePollinationDurationTicks;
+    public final ModConfigSpec.BooleanValue beeProtectFromHazardsAndStingDeath;
 
     // Nether Worker
     public final ModConfigSpec.BooleanValue enableEnhancedNetherWorkerAI;
@@ -139,6 +144,26 @@ public final class AgricultureAndHerdingConfig {
         this.enableBeekeeperHarvestPriority = builder
                 .comment("Prioritizes harvesting honey/honeycombs from full beehives before breeding bees, and tags nearby bees as colony-penned.")
                 .define("enableBeekeeperHarvestPriority", true);
+
+        this.enableEnhancedBeeAI = builder
+                .comment("Overhauls Minecraft's Bee AI: prevents bees from drifting away or forgetting their hive, fixes hive-entry deadzones and roof/corner getting-stuck bugs, speeds up flower discovery and pollination, and protects bees from water/campfire hazards.")
+                .define("enableEnhancedBeeAI", true);
+
+        this.beeMaxHiveWanderRadius = builder
+                .comment("Maximum radius in blocks a bee with a home hive is allowed to wander from its hive before being guided back (kept within MineColonies' 22-block Beekeeper detection range).")
+                .defineInRange("beeMaxHiveWanderRadius", 16, 6, 32);
+
+        this.beeFlowerSearchRadius = builder
+                .comment("Radius in blocks around a bee and its hive to scan for flowers when looking for nectar (vanilla default is only 5 blocks).")
+                .defineInRange("beeFlowerSearchRadius", 16, 5, 32);
+
+        this.beePollinationDurationTicks = builder
+                .comment("Number of ticks a bee needs to pollinate a flower before receiving nectar and returning to its hive (vanilla default is 400+ ticks).")
+                .defineInRange("beePollinationDurationTicks", 160, 40, 400);
+
+        this.beeProtectFromHazardsAndStingDeath = builder
+                .comment("Protects bees from drowning in water, burning on campfires under beehives, berry bush/cactus damage, and stinging MineColonies citizens/Beekeepers to death.")
+                .define("beeProtectFromHazardsAndStingDeath", true);
 
         this.enableEnhancedNetherWorkerAI = builder
                 .comment("Enables the improved Nether Miner expedition logic and expedition log tracking.")

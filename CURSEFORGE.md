@@ -59,7 +59,7 @@ See exactly what your citizens are thinking, building, and where they are walkin
 * **Smelter, Cook & Kitchen**: Skill- and building-level-scaled furnace smelting speed and fuel efficiency, **non-blocking Out-of-Order Dining Hall customer pool** (drive-by serving & automatic stuck-customer bypass so one unreachable citizen never blocks the restaurant), and instant citizen dining.
 * **Enchanter**: Batch Ancient Tome/Book requests, building-level mana caps, and autonomous daily XP collection.
 * **Concrete Mixer**: High-speed batch powder placement and cured concrete harvesting.
-* **Cowboy & Beekeeper**: Multi-milking/stewing per visit, no `Large Bottle` cooldown, Beekeeper hive-harvest priority, and automatic bee penning.
+* **Cowboy, Beekeeper & Enhanced Bee AI**: Multi-milking/stewing per visit, no `Large Bottle` cooldown, Beekeeper hive-harvest priority, and a complete **Minecraft Bee AI Overhaul** (persistent hive memory & 16-block home tether so bees never drift away or vanish, hive-entry deadzone & 3D roof/fence unstuck fixes, 16-block flower scanning & fast 8s pollination without vanilla's 2-minute delay, and protection against campfires, water drowning, berry bushes, and colonist sting deaths).
 * **GUI & Colony QoL**: Multi-keyword item search (with *Just Enough Characters* support), Tavern coin recruitment, remote Hospital curing, farmland trample protection, configurable grave decay/mourning timers, and full-colony Beacon range extension.
 
 ---

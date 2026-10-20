@@ -89,8 +89,9 @@ Every worker enhancement respects strict server-side caps to protect TPS and mul
   * Batch Ancient Tome / Book requests (`enchanterBookRequestBatchSize`), building-level mana caps (`enchanterMaxLevelPerBuildingLevel`), and autonomous daily XP drain from designated colony workers.
 * **Concrete Mixer**:
   * Batch concrete powder placement and cured block harvesting clamped to `concreteMixerMaxBatchSize`.
-* **Cowboy, Beekeeper & Herders**:
+* **Cowboy, Beekeeper, Bee AI & Herders**:
   * Multi-milking and mushroom stew collection per visit (`cowboyMaxMilkPerVisit`), removal of the `ItemLargeBottle` cooldown, Beekeeper hive-harvest priority when shearing is disabled, and automatic bee penning near hives.
+  * **Overhauled Minecraft Bee AI (`enableEnhancedBeeAI`)**: Persistent hive binding & home tether (`beeMaxHiveWanderRadius`, default `16` blocks so bees never drift outside the Beekeeper's 22-block scan range or forget their hive), direct hive-entrance approach & `2.0..2.6` block deadzone fix, 3D unstuck rescue under roofs/leaves/fences, expanded `16`-block flower discovery (`beeFlowerSearchRadius`), fast `8s` pollination (`beePollinationDurationTicks`), removal of vanilla's 2-minute known-flower wait, enhanced crop fertilization, and full immunity to campfires, water drowning, berry bushes, and stinging colonists to death.
 
 ---
 
