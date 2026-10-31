@@ -72,13 +72,23 @@ public abstract class EntityAIWorkBeekeeperMixin extends AbstractEntityAIInterac
 
     @Inject(method = "decideWhatToDo", at = @At("HEAD"), cancellable = true)
     private void advancedColonies$onDecideWhatToDo(final CallbackInfoReturnable<IAIState> cir) {
-        if (!HerdingAndButcherHelper.isBeekeeperHarvestPriorityEnabled() || building == null) {
+        if (building == null) {
+            return;
+        }
+
+        final Set<BlockPos> hives = building.getHives();
+        List<Bee> cachedBees = null;
+        if (!hives.isEmpty() && BeeAIHelper.isEnhancedBeeAIEnabled()) {
+            cachedBees = searchForAnimals(world, building);
+            BeeAIHelper.bindColonyBeesToHives(world, hives, cachedBees);
+        }
+
+        if (!HerdingAndButcherHelper.isBeekeeperHarvestPriorityEnabled()) {
             return;
         }
 
         setDelay(DECIDING_DELAY + (99 / Math.max(1, getSecondarySkillLevel()) - 1));
 
-        final Set<BlockPos> hives = building.getHives();
         if (hives.isEmpty()) {
             worker.getCitizenData().triggerInteraction(
                     new StandardInteraction(Component.translatable(NO_HIVES), ChatPriority.BLOCKING));
@@ -107,8 +117,7 @@ public abstract class EntityAIWorkBeekeeperMixin extends AbstractEntityAIInterac
             return;
         }
 
-        final List<Bee> bees = searchForAnimals(world, building);
-        BeeAIHelper.bindColonyBeesToHives(world, hives, bees);
+        final List<Bee> bees = cachedBees != null ? cachedBees : searchForAnimals(world, building);
 
         final JobBeekeeper beekeeperJob = worker.getCitizenJobHandler().getColonyJob(JobBeekeeper.class);
         if (beekeeperJob != null) {

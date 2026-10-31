@@ -1,6 +1,7 @@
 package com.advancedcolonies.mixin.common.bee;
 
 import com.advancedcolonies.workers.herder.BeeAIHelper;
+import com.advancedcolonies.workers.herder.IBeeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -23,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * and slow flower discovery/pollination.
  */
 @Mixin(Bee.class)
-public abstract class BeeMixin extends Animal {
+public abstract class BeeMixin extends Animal implements IBeeAccessor {
 
     @Shadow
     @Nullable
@@ -46,6 +47,9 @@ public abstract class BeeMixin extends Animal {
     abstract boolean wantsToEnterHive();
 
     @Shadow
+    abstract void setHasNectar(boolean hasNectar);
+
+    @Shadow
     public abstract boolean hasStung();
 
     @Shadow
@@ -54,6 +58,11 @@ public abstract class BeeMixin extends Animal {
 
     protected BeeMixin(final EntityType<? extends Animal> entityType, final Level level) {
         super(entityType, level);
+    }
+
+    @Override
+    public void advancedcolonies$setHasNectar(final boolean hasNectar) {
+        this.setHasNectar(hasNectar);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -147,5 +156,8 @@ public abstract class BeeMixin extends Animal {
                 (Bee) (Object) this,
                 this.wantsToEnterHive(),
                 this.ticksWithoutNectarSinceExitingHive);
+        if (this.savedFlowerPos == null) {
+            BeeAIHelper.stopPollinationGoal((Bee) (Object) this);
+        }
     }
 }

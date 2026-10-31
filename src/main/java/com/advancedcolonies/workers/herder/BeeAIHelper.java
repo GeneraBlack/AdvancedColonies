@@ -151,18 +151,21 @@ public final class BeeAIHelper {
 
             final BlockPos currentHive = bee.getHivePos();
             if (currentHive != null && beekeeperHives.contains(currentHive) && isValidHiveBlock(level, currentHive)) {
-                tag.putLong(TAG_BOUND_HIVE, currentHive.asLong());
-                continue;
+                final BlockEntity currentBe = level.isLoaded(currentHive) ? level.getBlockEntity(currentHive) : null;
+                if (!(currentBe instanceof BeehiveBlockEntity currentBeehive) || !currentBeehive.isFull()) {
+                    tag.putLong(TAG_BOUND_HIVE, currentHive.asLong());
+                    continue;
+                }
             }
 
-            // Assign homeless or non-colony bee to the nearest Beekeeper hive with available space
+            // Assign homeless, non-colony, or overflow bee to the nearest Beekeeper hive with available space
             BlockPos bestHive = null;
             double bestDistSqr = Double.MAX_VALUE;
             for (final BlockPos candidate : beekeeperHives) {
                 if (!isValidHiveBlock(level, candidate)) {
                     continue;
                 }
-                final BlockEntity be = level.getBlockEntity(candidate);
+                final BlockEntity be = level.isLoaded(candidate) ? level.getBlockEntity(candidate) : null;
                 final boolean hasSpace = !(be instanceof BeehiveBlockEntity beehive) || !beehive.isFull();
                 final double distSqr = bee.blockPosition().distSqr(candidate);
                 if (hasSpace && distSqr < bestDistSqr) {
@@ -171,7 +174,9 @@ public final class BeeAIHelper {
                 }
             }
             if (bestHive == null) {
-                bestHive = beekeeperHives.iterator().next();
+                bestHive = (currentHive != null && beekeeperHives.contains(currentHive))
+                        ? currentHive
+                        : beekeeperHives.iterator().next();
             }
             if (bestHive != null && isValidHiveBlock(level, bestHive)) {
                 bee.setHivePos(bestHive.immutable());
@@ -357,11 +362,24 @@ public final class BeeAIHelper {
                     return;
                 }
                 final BlockEntity be = level.getBlockEntity(savedHive);
-                if (be instanceof BeehiveBlockEntity beehive
-                        && (!beehive.isFull() || tag.getBoolean(TAG_PENNED))) {
-                    bee.setHivePos(savedHive);
-                    bee.getBlacklistedHives().clear();
-                    return;
+                if (be instanceof BeehiveBlockEntity beehive) {
+                    if (!beehive.isFull()) {
+                        bee.setHivePos(savedHive);
+                        bee.getBlacklistedHives().clear();
+                        return;
+                    }
+                    final BlockPos alternateHive = findNearbyHiveWithSpace(level, savedHive, 22);
+                    if (alternateHive != null) {
+                        bee.setHivePos(alternateHive);
+                        tag.putLong(TAG_BOUND_HIVE, alternateHive.asLong());
+                        bee.getBlacklistedHives().clear();
+                        return;
+                    }
+                    if (tag.getBoolean(TAG_PENNED)) {
+                        bee.setHivePos(savedHive);
+                        bee.getBlacklistedHives().clear();
+                        return;
+                    }
                 }
             } else {
                 tag.remove(TAG_BOUND_HIVE);
@@ -387,9 +405,9 @@ public final class BeeAIHelper {
         }
 
         if (beehive.isFull()) {
-            // If this bee's bound hive is temporarily full (3 bees inside), try to find an adjacent non-full hive
-            if (bee.tickCount % 40 == 0) {
-                final BlockPos alternateHive = findNearbyHiveWithSpace(level, hivePos, 12);
+            // If this bee's bound hive is temporarily full (3 bees inside), switch to any nearby hive with space within 22 blocks
+            if (bee.tickCount % 20 == 0) {
+                final BlockPos alternateHive = findNearbyHiveWithSpace(level, hivePos, 22);
                 if (alternateHive != null) {
                     bee.setHivePos(alternateHive);
                     tag.putLong(TAG_BOUND_HIVE, alternateHive.asLong());
@@ -405,9 +423,7 @@ public final class BeeAIHelper {
 
         // Direct Entry Fix: enter immediately when within 2.65 blocks of hive center or 1.75 blocks of entrance
         if (distToHiveSqr <= 7.0D || distToEntranceSqr <= 3.06D) {
-            tag.putInt(TAG_STUCK_TICKS, 0);
-            tag.putInt(TAG_RETURN_TICKS, 0);
-            beehive.addOccupant(bee);
+            tryEnterBeehive(bee, beehive, tag);
             return;
         }
 
@@ -445,12 +461,32 @@ public final class BeeAIHelper {
 
             if (stuckTicks >= 100 || returnTicks >= 300) {
                 // Guaranteed unstuck entry: place bee at entrance and insert into hive
-                tag.putInt(TAG_STUCK_TICKS, 0);
-                tag.putInt(TAG_RETURN_TICKS, 0);
                 bee.moveTo(entrancePos.x, entrancePos.y, entrancePos.z, bee.getYRot(), bee.getXRot());
-                beehive.addOccupant(bee);
+                tryEnterBeehive(bee, beehive, tag);
             }
         }
+    }
+
+    /**
+     * Safely inserts a live, non-removed {@link Bee} into the given {@link BeehiveBlockEntity}
+     * after cleaning transient per-tick tracking NBT tags.
+     */
+    private static void tryEnterBeehive(
+            @NotNull final Bee bee,
+            @NotNull final BeehiveBlockEntity beehive,
+            @NotNull final CompoundTag tag) {
+
+        if (!bee.isAlive() || bee.isRemoved() || beehive.isFull()) {
+            return;
+        }
+        tag.remove(TAG_STUCK_TICKS);
+        tag.remove(TAG_RETURN_TICKS);
+        tag.remove(TAG_POLLINATE_TICKS);
+        tag.remove(TAG_LAST_X);
+        tag.remove(TAG_LAST_Y);
+        tag.remove(TAG_LAST_Z);
+        stopPollinationGoal(bee);
+        beehive.addOccupant(bee);
     }
 
     /**
@@ -466,11 +502,15 @@ public final class BeeAIHelper {
             @NotNull final AgricultureAndHerdingConfig cfg,
             @NotNull final CompoundTag tag) {
 
+        final boolean pollinateGoalRunning = isPriorityGoalRunning(bee, 4);
         BlockPos flowerPos = bee.getSavedFlowerPos();
         if (flowerPos != null) {
             final boolean withinHiveRange = hivePos == null
                     || flowerPos.distSqr(hivePos) <= (double) (maxWanderRadius + 6) * (maxWanderRadius + 6);
-            if (!withinHiveRange || !isValidSafeFlower(level, flowerPos)) {
+            final boolean flowerValid = pollinateGoalRunning
+                    ? isFlowerBlockStillValid(level, flowerPos)
+                    : isValidSafeFlower(level, flowerPos);
+            if (!withinHiveRange || !flowerValid) {
                 bee.setSavedFlowerPos(null);
                 stopPollinationGoal(bee);
                 tag.putInt(TAG_POLLINATE_TICKS, 0);
@@ -500,14 +540,14 @@ public final class BeeAIHelper {
 
         final Vec3 hoverTarget = Vec3.atBottomCenterOf(flowerPos).add(0.0D, 0.6D, 0.0D);
         final double distToFlowerSqr = bee.position().distanceToSqr(hoverTarget);
-        final boolean pollinateGoalRunning = isPriorityGoalRunning(bee, 4);
+        final boolean isCurrentlyPollinating = isPriorityGoalRunning(bee, 4);
 
-        if (distToFlowerSqr <= 2.56D || pollinateGoalRunning) {
+        if (distToFlowerSqr <= 2.56D || isCurrentlyPollinating) {
             // Actively hovering over flower: increment accelerated pollination timer
             final int pollinateTicks = tag.getInt(TAG_POLLINATE_TICKS) + 1;
             tag.putInt(TAG_POLLINATE_TICKS, pollinateTicks);
 
-            if (!pollinateGoalRunning) {
+            if (!isCurrentlyPollinating) {
                 bee.getMoveControl().setWantedPosition(hoverTarget.x, hoverTarget.y, hoverTarget.z, 0.35D);
                 bee.getLookControl().setLookAt(hoverTarget.x, hoverTarget.y - 0.3D, hoverTarget.z);
                 if (pollinateTicks % 55 == 0) {
@@ -518,7 +558,7 @@ public final class BeeAIHelper {
             final int requiredTicks = Math.max(40, Math.min(400, cfg.beePollinationDurationTicks.get()));
             if (pollinateTicks >= requiredTicks) {
                 tag.putInt(TAG_POLLINATE_TICKS, 0);
-                stopPriorityGoal(bee, 4);
+                stopPollinationGoal(bee);
                 bee.resetTicksWithoutNectarSinceExitingHive();
                 setBeeHasNectar(bee, true);
                 bee.playSound(SoundEvents.BEE_POLLINATE, 1.0F, 1.0F);
@@ -709,7 +749,7 @@ public final class BeeAIHelper {
         return candidates.get(level.random.nextInt(pickBound));
     }
 
-    private static boolean isValidSafeFlower(@NotNull final Level level, @NotNull final BlockPos pos) {
+    private static boolean isFlowerBlockStillValid(@NotNull final Level level, @NotNull final BlockPos pos) {
         if (!level.isLoaded(pos)) {
             return false;
         }
@@ -717,16 +757,17 @@ public final class BeeAIHelper {
         if (state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED)) {
             return false;
         }
-        if (!state.is(BlockTags.FLOWERS)) {
+        if (!state.is(BlockTags.FLOWERS) || state.is(Blocks.WITHER_ROSE) || isHazardBlock(state)) {
             return false;
         }
         if (state.is(Blocks.SUNFLOWER) && state.getValue(DoublePlantBlock.HALF) != DoubleBlockHalf.UPPER) {
             return false;
         }
-        if (state.is(Blocks.WITHER_ROSE)) {
-            return false;
-        }
-        return isSafeAirForBee(level, pos.above());
+        return level.getFluidState(pos).isEmpty() && level.getFluidState(pos.above()).isEmpty();
+    }
+
+    private static boolean isValidSafeFlower(@NotNull final Level level, @NotNull final BlockPos pos) {
+        return isFlowerBlockStillValid(level, pos) && isSafeAirForBee(level, pos.above());
     }
 
     private static boolean isSafeAirForBee(@NotNull final Level level, @NotNull final BlockPos pos) {
@@ -780,12 +821,8 @@ public final class BeeAIHelper {
     }
 
     private static void setBeeHasNectar(@NotNull final Bee bee, final boolean hasNectar) {
-        final CompoundTag tag = new CompoundTag();
-        bee.addAdditionalSaveData(tag);
-        tag.putBoolean(Bee.TAG_HAS_NECTAR, hasNectar);
-        if (hasNectar) {
-            tag.putInt(Bee.TAG_TICKS_SINCE_POLLINATION, 0);
+        if (bee instanceof IBeeAccessor accessor) {
+            accessor.advancedcolonies$setHasNectar(hasNectar);
         }
-        bee.readAdditionalSaveData(tag);
     }
 }
