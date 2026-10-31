@@ -469,9 +469,11 @@ public final class BeeAIHelper {
         BlockPos flowerPos = bee.getSavedFlowerPos();
         if (flowerPos != null) {
             final boolean withinHiveRange = hivePos == null
-                    || flowerPos.distSqr(hivePos) <= (double) (maxWanderRadius + 2) * (maxWanderRadius + 2);
+                    || flowerPos.distSqr(hivePos) <= (double) (maxWanderRadius + 6) * (maxWanderRadius + 6);
             if (!withinHiveRange || !isValidSafeFlower(level, flowerPos)) {
                 bee.setSavedFlowerPos(null);
+                stopPollinationGoal(bee);
+                tag.putInt(TAG_POLLINATE_TICKS, 0);
                 flowerPos = null;
             }
         }
@@ -759,6 +761,14 @@ public final class BeeAIHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * Safely stops the running priority-4 {@code BeePollinateGoal} on the given {@link Bee}
+     * so {@code BeePollinateGoal#tick()} is never invoked with a {@code null} {@code savedFlowerPos}.
+     */
+    public static void stopPollinationGoal(@NotNull final Bee bee) {
+        stopPriorityGoal(bee, 4);
     }
 
     private static void stopPriorityGoal(@NotNull final Bee bee, final int priority) {

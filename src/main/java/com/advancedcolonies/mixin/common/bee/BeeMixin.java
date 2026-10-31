@@ -30,6 +30,10 @@ public abstract class BeeMixin extends Animal {
     BlockPos hivePos;
 
     @Shadow
+    @Nullable
+    BlockPos savedFlowerPos;
+
+    @Shadow
     int ticksWithoutNectarSinceExitingHive;
 
     @Shadow
@@ -107,6 +111,22 @@ public abstract class BeeMixin extends Animal {
             final CallbackInfoReturnable<Boolean> cir) {
         if (BeeAIHelper.shouldPreventBeeSting((Bee) (Object) this, entity)) {
             cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "setSavedFlowerPos", at = @At("TAIL"))
+    private void advancedcolonies$onSetSavedFlowerPos(
+            @Nullable final BlockPos savedFlowerPos,
+            final CallbackInfo ci) {
+        if (savedFlowerPos == null && !this.level().isClientSide) {
+            BeeAIHelper.stopPollinationGoal((Bee) (Object) this);
+        }
+    }
+
+    @Inject(method = "aiStep", at = @At("HEAD"))
+    private void advancedcolonies$onAiStepHead(final CallbackInfo ci) {
+        if (!this.level().isClientSide && this.savedFlowerPos == null) {
+            BeeAIHelper.stopPollinationGoal((Bee) (Object) this);
         }
     }
 
